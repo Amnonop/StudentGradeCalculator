@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.902
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StudentGradeCalculator", "StudentGradeCalculator\StudentGradeCalculator.vcxproj", "{90750283-B689-425F-9F13-88DC05B818EB}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestGrade", "TestGrade\TestGrade.vcxproj", "{72ADE9A4-AA96-483D-8C84-5B67CF6D7546}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,14 +13,14 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{90750283-B689-425F-9F13-88DC05B818EB}.Debug|x64.ActiveCfg = Debug|x64
-		{90750283-B689-425F-9F13-88DC05B818EB}.Debug|x64.Build.0 = Debug|x64
-		{90750283-B689-425F-9F13-88DC05B818EB}.Debug|x86.ActiveCfg = Debug|Win32
-		{90750283-B689-425F-9F13-88DC05B818EB}.Debug|x86.Build.0 = Debug|Win32
-		{90750283-B689-425F-9F13-88DC05B818EB}.Release|x64.ActiveCfg = Release|x64
-		{90750283-B689-425F-9F13-88DC05B818EB}.Release|x64.Build.0 = Release|x64
-		{90750283-B689-425F-9F13-88DC05B818EB}.Release|x86.ActiveCfg = Release|Win32
-		{90750283-B689-425F-9F13-88DC05B818EB}.Release|x86.Build.0 = Release|Win32
+		{72ADE9A4-AA96-483D-8C84-5B67CF6D7546}.Debug|x64.ActiveCfg = Debug|x64
+		{72ADE9A4-AA96-483D-8C84-5B67CF6D7546}.Debug|x64.Build.0 = Debug|x64
+		{72ADE9A4-AA96-483D-8C84-5B67CF6D7546}.Debug|x86.ActiveCfg = Debug|Win32
+		{72ADE9A4-AA96-483D-8C84-5B67CF6D7546}.Debug|x86.Build.0 = Debug|Win32
+		{72ADE9A4-AA96-483D-8C84-5B67CF6D7546}.Release|x64.ActiveCfg = Release|x64
+		{72ADE9A4-AA96-483D-8C84-5B67CF6D7546}.Release|x64.Build.0 = Release|x64
+		{72ADE9A4-AA96-483D-8C84-5B67CF6D7546}.Release|x86.ActiveCfg = Release|Win32
+		{72ADE9A4-AA96-483D-8C84-5B67CF6D7546}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
