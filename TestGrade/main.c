@@ -4,12 +4,24 @@
 #include <string.h> 
 #include <errno.h>
 #include <math.h>
+#include <windows.h>
+
 #define FAIL_THRESHOLD 60
 #define NUM_OF_HW 10
 #define HW_FILENAME_LENGTH 9
 #define NUM_OF_CALC_HW 8
 #define MIDTERM_FILENAME_LENGTH 11
 #define EXAM_FILENAME_LENGTH 9
+#define NUM_THREADS 13
+#define BRUTAL_TERMINATION_CODE 0x55
+#define ERROR_CODE ((int)(-1))
+
+/*global variables*/
+int midterm_grade = 0;
+
+int exam_grade = 0;
+int hw_grades[NUM_OF_HW] = { 0 };
+
 
 
 int getGradeFromFile(char* filename);
@@ -18,6 +30,11 @@ void sortArray(int* hw_grades[NUM_OF_HW]);
 int getMidtermGrade(char* grades_directory);
 int getExamGrade(char* grades_directory);
 int calculateFinalGrade(float hw_grade, int midterm_grade, int exam_grade);
+DWORD WINAPI midtermGradeThread(LPVOID lpParam);
+
+HANDLE createThreadSimple(LPTHREAD_START_ROUTINE p_start_routine,
+	LPVOID p_thread_parameters,
+	LPDWORD p_thread_id);
 
 int main()
 {
@@ -26,11 +43,20 @@ int main()
 	/*MIDTERM*/
 	/*FINAL A*/
 	/*FINAL B*/
+	HANDLE p_thread_handles[NUM_THREADS];
+	DWORD p_thread_ids[NUM_THREADS];
+	DWORD wait_code;
+	BOOL ret_val;
+	size_t i;
+
+	// Create two threads, each thread performs on task.
+	p_thread_handles[0] = createThreadSimple(midtermGradeThread, grades_directory,&p_thread_ids[0]);
+	//p_thread_handles[1] = CreateThreadSimple(CommunicationThread, &p_thread_ids[1]);
 
 	/*Calculate HW total grade*/
 	float hw_grade = getHomeWorkGrade(grades_directory);
 	printf("hw_grade %d", &hw_grade);
-	int midterm_grade = getMidtermGrade(grades_directory);
+	//int midterm_grade = getMidtermGrade(grades_directory);
 	printf("hmidterm_grade %d", &midterm_grade);
 	int exam_grade = getExamGrade(grades_directory);
 	printf("exam_grade %d", &exam_grade);
@@ -72,15 +98,58 @@ float getHomeWorkGrade(char* grades_directory)
 	return (hw_grade / NUM_OF_CALC_HW);
 }
 
+HANDLE createThreadSimple(LPTHREAD_START_ROUTINE p_start_routine,
+	LPVOID p_thread_parameters,
+	LPDWORD p_thread_id)
+{
+	HANDLE thread_handle;
+
+	if (NULL == p_start_routine)
+	{
+		printf("Error when creating a thread");
+		printf("Received null pointer");
+		exit(ERROR_CODE);
+	}
+
+	if (NULL == p_thread_id)
+	{
+		printf("Error when creating a thread");
+		printf("Received null pointer");
+		exit(ERROR_CODE);
+	}
+
+	thread_handle = CreateThread(
+		NULL,                /*  default security attributes */
+		0,                   /*  use default stack size */
+		p_start_routine,     /*  thread function */
+		p_thread_parameters, /*  argument to thread function */
+		0,                   /*  use default creation flags */
+		p_thread_id);        /*  returns the thread identifier */
+
+	if (NULL == thread_handle)
+	{
+		printf("Couldn't create thread\n");
+		exit(ERROR_CODE);
+	}
+
+	return thread_handle;
+}
+
+DWORD WINAPI midtermGradeThread(LPVOID lpParam)
+{
+	char* grades_directory;
+	grades_directory = (char*)lpParam;
+	midterm_grade = getMidtermGrade(grades_directory);//GLOBAL
+}
+
 int getMidtermGrade(char* grades_directory)
 {
 	int midterm_grade;
 	char* midterm_file_name = "midterm.txt";
 	char* curr_file_path;
-
 	int directory_path_length = strlen(grades_directory);
 	int filename_length = directory_path_length + 1 + MIDTERM_FILENAME_LENGTH + 1;
-
+	 
 	curr_file_path = (char*)malloc(sizeof(char)*filename_length);
 	sprintf_s(curr_file_path, filename_length, "%s\\%s", grades_directory, midterm_file_name);
 	midterm_grade = getGradeFromFile(curr_file_path);
