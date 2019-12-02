@@ -1,16 +1,23 @@
 #include <stdlib.h>
 #include <limits.h>
-# include <stdio.h> 
-# include <string.h> 
-# include <errno.h>
+#include <stdio.h> 
+#include <string.h> 
+#include <errno.h>
+#include <math.h>
 #define FAIL_THRESHOLD 60
-# define NUM_OF_HW 10
-# define HW_FILENAME_LENGTH 9
+#define NUM_OF_HW 10
+#define HW_FILENAME_LENGTH 9
 #define NUM_OF_CALC_HW 8
+#define MIDTERM_FILENAME_LENGTH 11
+#define EXAM_FILENAME_LENGTH 9
+
 
 int getGradeFromFile(char* filename);
-int getHomeWorkGrade(char* grades_directory);
+float getHomeWorkGrade(char* grades_directory);
 void sortArray(int* hw_grades[NUM_OF_HW]);
+int getMidtermGrade(char* grades_directory);
+int getExamGrade(char* grades_directory);
+int calculateFinalGrade(float hw_grade, int midterm_grade, int exam_grade);
 
 int main()
 {
@@ -21,11 +28,18 @@ int main()
 	/*FINAL B*/
 
 	/*Calculate HW total grade*/
-	int hw_grade = getHomeWorkGrade(grades_directory);
+	float hw_grade = getHomeWorkGrade(grades_directory);
 	printf("hw_grade %d", &hw_grade);
+	int midterm_grade = getMidtermGrade(grades_directory);
+	printf("hmidterm_grade %d", &midterm_grade);
+	int exam_grade = getExamGrade(grades_directory);
+	printf("exam_grade %d", &exam_grade);
+	int final_grade = calculateFinalGrade(hw_grade, midterm_grade, exam_grade);
+	printf("final_grade %d", &final_grade);
+	int test = ceil(81.1);
 }
 
-int getHomeWorkGrade(char* grades_directory)
+float getHomeWorkGrade(char* grades_directory)
 {
 	int hw_grades[NUM_OF_HW] = { 0 };
 	int i = 0;
@@ -48,14 +62,61 @@ int getHomeWorkGrade(char* grades_directory)
 	}
 
 	sortArray(hw_grades);
-	int hw_grade = 0;
+	float hw_grade = 0;
 
 	for (int i = 0; i < NUM_OF_CALC_HW; i++)
 	{
 		if (hw_grades[i] >= FAIL_THRESHOLD) 
 			hw_grade += hw_grades[i];
 	}
-	return hw_grade / NUM_OF_CALC_HW;
+	return (hw_grade / NUM_OF_CALC_HW);
+}
+
+int getMidtermGrade(char* grades_directory)
+{
+	int midterm_grade;
+	char* midterm_file_name = "midterm.txt";
+	char* curr_file_path;
+
+	int directory_path_length = strlen(grades_directory);
+	int filename_length = directory_path_length + 1 + MIDTERM_FILENAME_LENGTH + 1;
+
+	curr_file_path = (char*)malloc(sizeof(char)*filename_length);
+	sprintf_s(curr_file_path, filename_length, "%s\\%s", grades_directory, midterm_file_name);
+	midterm_grade = getGradeFromFile(curr_file_path);
+	if (midterm_grade < FAIL_THRESHOLD)
+		midterm_grade = 0;
+	free(curr_file_path);
+	return midterm_grade;
+}
+
+int getExamGrade(char* grades_directory)
+{
+	int moedA_grade;
+	int moedB_grade;
+	int exam_grade = 0;
+	char* moedA_file_name = "moedA.txt";
+	char* moedB_file_name= "moedB.txt";
+	char* curr_file_path;
+	int directory_path_length = strlen(grades_directory);
+	int filename_length = directory_path_length + 1 + EXAM_FILENAME_LENGTH + 1;
+
+	curr_file_path = (char*)malloc(sizeof(char)*filename_length);
+	sprintf_s(curr_file_path, filename_length, "%s\\%s", grades_directory, moedA_file_name);
+	moedA_grade = getGradeFromFile(curr_file_path);
+	free(curr_file_path);
+
+	/*code copied - insert to a function*/
+	curr_file_path = (char*)malloc(sizeof(char)*filename_length);
+	sprintf_s(curr_file_path, filename_length, "%s\\%s", grades_directory, moedB_file_name);
+	moedB_grade = getGradeFromFile(curr_file_path);
+	free(curr_file_path);
+	exam_grade = moedB_grade;
+	if (moedB_grade == 0)
+		exam_grade = moedA_grade;
+	if (exam_grade < FAIL_THRESHOLD)
+		exam_grade = 0;
+	return exam_grade;
 }
 
 int getGradeFromFile(char* filename)
@@ -77,8 +138,13 @@ int getGradeFromFile(char* filename)
 	return sub_grade;
 }
 
-
-void appendToFile(char* file_path, char* sub_solution)
+int calculateFinalGrade(float hw_grade, int midterm_grade, int exam_grade)
+{
+	float final_grade = 0;
+	final_grade = 0.2*hw_grade + 0.2*midterm_grade + 0.6*exam_grade;
+	return ceil(final_grade);
+}
+/*void appendToFile(char* file_path, char* sub_solution)
 {
 	FILE *fp;
 	fopen_s(&fp, file_path, "a");
@@ -97,7 +163,7 @@ void appendToFile(char* file_path, char* sub_solution)
 	fclose(fp);
 
 	free(new_line);
-}
+}*/
 
 void sortArray(int* hw_grades[NUM_OF_HW])
 {
