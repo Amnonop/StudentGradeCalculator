@@ -18,12 +18,11 @@
 
 /*global variables*/
 int midterm_grade = 0;
-
 int exam_grade = 0;
 int hw_grades[NUM_OF_HW] = { 0 };
 
 
-
+/*declerations*/
 int getGradeFromFile(char* filename);
 float getHomeWorkGrade(char* grades_directory);
 void sortArray(int* hw_grades[NUM_OF_HW]);
@@ -31,6 +30,7 @@ int getMidtermGrade(char* grades_directory);
 int getExamGrade(char* grades_directory);
 int calculateFinalGrade(float hw_grade, int midterm_grade, int exam_grade);
 DWORD WINAPI midtermGradeThread(LPVOID lpParam);
+DWORD WINAPI getExamGradeThread(LPVOID lpParam);
 
 HANDLE createThreadSimple(LPTHREAD_START_ROUTINE p_start_routine,
 	LPVOID p_thread_parameters,
@@ -51,18 +51,17 @@ int main()
 
 	// Create two threads, each thread performs on task.
 	p_thread_handles[0] = createThreadSimple(midtermGradeThread, grades_directory,&p_thread_ids[0]);
-	//p_thread_handles[1] = CreateThreadSimple(CommunicationThread, &p_thread_ids[1]);
+	p_thread_handles[1] = createThreadSimple(getExamGradeThread, grades_directory, &p_thread_ids[1]);
 
 	/*Calculate HW total grade*/
 	float hw_grade = getHomeWorkGrade(grades_directory);
 	printf("hw_grade %d", &hw_grade);
 	//int midterm_grade = getMidtermGrade(grades_directory);
 	printf("hmidterm_grade %d", &midterm_grade);
-	int exam_grade = getExamGrade(grades_directory);
+	//int exam_grade = getExamGrade(grades_directory);
 	printf("exam_grade %d", &exam_grade);
 	int final_grade = calculateFinalGrade(hw_grade, midterm_grade, exam_grade);
 	printf("final_grade %d", &final_grade);
-	int test = ceil(81.1);
 }
 
 float getHomeWorkGrade(char* grades_directory)
@@ -141,6 +140,15 @@ DWORD WINAPI midtermGradeThread(LPVOID lpParam)
 	grades_directory = (char*)lpParam;
 	midterm_grade = getMidtermGrade(grades_directory);//GLOBAL
 }
+
+DWORD WINAPI getExamGradeThread(LPVOID lpParam)
+{
+	char* grades_directory;
+	grades_directory = (char*)lpParam;
+	exam_grade = getExamGrade(grades_directory);//GLOBAL
+}
+
+
 
 int getMidtermGrade(char* grades_directory)
 {
