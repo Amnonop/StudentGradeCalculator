@@ -19,7 +19,7 @@
 /*global variables*/
 static int midterm_grade = 0;
 static int exam_grade = 0;
-int hw_grades[NUM_OF_HW] = { 0 };
+static int hw_grades[NUM_OF_HW] = { 0 };
 
 
 /*declerations*/
@@ -50,18 +50,22 @@ int main()
 	size_t i;
 
 	// Create two threads, each thread performs on task.
+
 	p_thread_handles[0] = createThreadSimple(midtermGradeThread, grades_directory, &p_thread_ids[0]);
 	p_thread_handles[1] = createThreadSimple(getExamGradeThread, grades_directory, &p_thread_ids[1]);
-
+	//for (size_t i = 2; i < NUM_THREADS; i++)
+	//{
+	//	p_thread_handles[i] = createThreadSimple(midtermGradeThread, grades_directory, &p_thread_ids[i]);
+	//}
 	/*Calculate HW total grade*/
 	float hw_grade = getHomeWorkGrade(grades_directory);
-	printf("hw_grade %d", &hw_grade);
+	printf("hw_grade %f", hw_grade);
 	//int midterm_grade = getMidtermGrade(grades_directory);
-	printf("hmidterm_grade %d", &midterm_grade);
+	printf("hmidterm_grade %d", midterm_grade);
 	//int exam_grade = getExamGrade(grades_directory);
-	printf("exam_grade %d", &exam_grade);
+	printf("exam_grade %d", exam_grade);
 	int final_grade = calculateFinalGrade(hw_grade, midterm_grade, exam_grade);
-	printf("final_grade %d", &final_grade);
+	printf("final_grade %d", final_grade);
 }
 
 float getHomeWorkGrade(char* grades_directory)
