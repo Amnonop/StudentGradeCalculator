@@ -17,8 +17,8 @@
 #define ERROR_CODE ((int)(-1))
 
 /*global variables*/
-int midterm_grade = 0;
-int exam_grade = 0;
+static int midterm_grade = 0;
+static int exam_grade = 0;
 int hw_grades[NUM_OF_HW] = { 0 };
 
 
@@ -50,7 +50,7 @@ int main()
 	size_t i;
 
 	// Create two threads, each thread performs on task.
-	p_thread_handles[0] = createThreadSimple(midtermGradeThread, grades_directory,&p_thread_ids[0]);
+	p_thread_handles[0] = createThreadSimple(midtermGradeThread, grades_directory, &p_thread_ids[0]);
 	p_thread_handles[1] = createThreadSimple(getExamGradeThread, grades_directory, &p_thread_ids[1]);
 
 	/*Calculate HW total grade*/
@@ -68,10 +68,10 @@ float getHomeWorkGrade(char* grades_directory)
 {
 	int hw_grades[NUM_OF_HW] = { 0 };
 	int i = 0;
-	char* hw_file_names[NUM_OF_HW] = 
-		{"ex01.txt","ex02.txt","ex03.txt", 
-		"ex04.txt", "ex05.txt", "ex06.txt",
-		"ex07.txt", "ex08.txt", "ex09.txt", "ex10.txt" };
+	char* hw_file_names[NUM_OF_HW] =
+	{ "ex01.txt","ex02.txt","ex03.txt",
+	"ex04.txt", "ex05.txt", "ex06.txt",
+	"ex07.txt", "ex08.txt", "ex09.txt", "ex10.txt" };
 	char* curr_file_path;
 
 	int directory_path_length = strlen(grades_directory);
@@ -81,7 +81,7 @@ float getHomeWorkGrade(char* grades_directory)
 	{
 		curr_file_path = (char*)malloc(sizeof(char)*filename_length);
 		sprintf_s(curr_file_path, filename_length, "%s\\%s", grades_directory, hw_file_names[i]);
-		
+
 		hw_grades[i] = getGradeFromFile(curr_file_path);
 		free(curr_file_path);
 	}
@@ -91,7 +91,7 @@ float getHomeWorkGrade(char* grades_directory)
 
 	for (int i = 0; i < NUM_OF_CALC_HW; i++)
 	{
-		if (hw_grades[i] >= FAIL_THRESHOLD) 
+		if (hw_grades[i] >= FAIL_THRESHOLD)
 			hw_grade += hw_grades[i];
 	}
 	return (hw_grade / NUM_OF_CALC_HW);
@@ -157,7 +157,7 @@ int getMidtermGrade(char* grades_directory)
 	char* curr_file_path;
 	int directory_path_length = strlen(grades_directory);
 	int filename_length = directory_path_length + 1 + MIDTERM_FILENAME_LENGTH + 1;
-	 
+
 	curr_file_path = (char*)malloc(sizeof(char)*filename_length);
 	sprintf_s(curr_file_path, filename_length, "%s\\%s", grades_directory, midterm_file_name);
 	midterm_grade = getGradeFromFile(curr_file_path);
@@ -173,7 +173,7 @@ int getExamGrade(char* grades_directory)
 	int moedB_grade;
 	int exam_grade = 0;
 	char* moedA_file_name = "moedA.txt";
-	char* moedB_file_name= "moedB.txt";
+	char* moedB_file_name = "moedB.txt";
 	char* curr_file_path;
 	int directory_path_length = strlen(grades_directory);
 	int filename_length = directory_path_length + 1 + EXAM_FILENAME_LENGTH + 1;
