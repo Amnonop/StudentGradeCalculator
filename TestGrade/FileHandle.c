@@ -34,7 +34,7 @@ EXIT_CODE readFromFile(char *filename, int *value)
 		return ERROR_OPEN_FILE;
 	}
 
-	fscanf_s(file, "%d", &value);
+	fscanf_s(file, "%d", value);
 
 	fclose(file);
 

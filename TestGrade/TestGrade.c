@@ -90,9 +90,10 @@ int calculateGrade(char* grades_directory)
 		thread_params[hw_id].grades_directory = grades_directory;
 		thread_params[hw_id].hw_id = hw_id;
 		thread_params[hw_id].hw_mutex_handle = hw_mutex_handle;
-		hw_id++;
+		
 		
 		p_thread_handles[i] = createThreadSimple(hwGradeThread, &(thread_params[hw_id]), &p_thread_ids[i]);
+		hw_id++;
 		if (p_thread_handles[i] == NULL)
 		{
 			return TG_THREAD_CREATE_FAILED;
@@ -225,7 +226,7 @@ EXIT_CODE getHomeworkGrade(char* grades_directory, int hw_id, HANDLE hw_mutex_ha
 
 	// This section should be locked
 	exit_code = updateHWGrade(hw_id, hw_grade, hw_mutex_handle);
-		if (exit_code != 0)
+	if (exit_code != 0)
 		return exit_code;
 
 	return 0;
