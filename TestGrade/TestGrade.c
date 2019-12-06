@@ -8,13 +8,13 @@
 #include "TestGrade.h"
 #include "Commons.h"
 #include "FileHandle.h"
+#include "ThreadHandle.h"
 
 #define HW_FILENAME_LENGTH 9
 #define NUM_OF_CALC_HW 8
 #define EXAM_FILENAME_LENGTH 9
 #define NUM_THREADS 13
 #define BRUTAL_TERMINATION_CODE 0x55
-#define ERROR_CODE ((int)(-1))
 
 /*global variables*/
 static int midterm_grade = 0;
@@ -40,10 +40,6 @@ int calculateFinalGrade(float hw_grade, int midterm_grade, int exam_grade);
 DWORD WINAPI midtermGradeThread(LPVOID lpParam);
 DWORD WINAPI getExamGradeThread(LPVOID lpParam);
 DWORD WINAPI hwGradeThread(LPVOID lpParam);
-
-HANDLE createThreadSimple(LPTHREAD_START_ROUTINE p_start_routine,
-	LPVOID p_thread_parameters,
-	LPDWORD p_thread_id);
 
 int calculateGrade(char* grades_directory)
 {
@@ -95,43 +91,6 @@ float getHomeWorkGrade(char* grades_directory)
 	return (hw_grade / NUM_OF_CALC_HW);
 }
 
-HANDLE createThreadSimple(LPTHREAD_START_ROUTINE p_start_routine,
-	LPVOID p_thread_parameters,
-	LPDWORD p_thread_id)
-{
-	HANDLE thread_handle;
-
-	if (NULL == p_start_routine)
-	{
-		printf("Error when creating a thread");
-		printf("Received null pointer");
-		exit(ERROR_CODE);
-	}
-
-	if (NULL == p_thread_id)
-	{
-		printf("Error when creating a thread");
-		printf("Received null pointer");
-		exit(ERROR_CODE);
-	}
-
-	thread_handle = CreateThread(
-		NULL,                /*  default security attributes */
-		0,                   /*  use default stack size */
-		p_start_routine,     /*  thread function */
-		p_thread_parameters, /*  argument to thread function */
-		0,                   /*  use default creation flags */
-		p_thread_id);        /*  returns the thread identifier */
-
-	if (NULL == thread_handle)
-	{
-		printf("Couldn't create thread\n");
-		exit(ERROR_CODE);
-	}
-
-	return thread_handle;
-}
-
 DWORD WINAPI hwGradeThread(LPVOID lpParam)
 {
 	char* grades_directory;
@@ -154,9 +113,6 @@ DWORD WINAPI getExamGradeThread(LPVOID lpParam)
 	grades_directory = (char*)lpParam;
 	exam_grade = getExamGrade(grades_directory);//GLOBAL
 }
-
-
-
 
 int getExamGrade(char* grades_directory)
 {
@@ -186,8 +142,6 @@ int getExamGrade(char* grades_directory)
 		exam_grade = 0;
 	return (exam_grade);
 }
-
-
 
 int getGradeFromFile2(char* filename)
 {

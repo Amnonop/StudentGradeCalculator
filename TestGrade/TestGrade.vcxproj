@@ -119,11 +119,13 @@
     <ClCompile Include="main.c" />
     <ClCompile Include="MidtermGrade.c" />
     <ClCompile Include="TestGrade.c" />
+    <ClCompile Include="ThreadHandle.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Commons.h" />
     <ClInclude Include="FileHandle.h" />
     <ClInclude Include="TestGrade.h" />
+    <ClInclude Include="ThreadHandle.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
