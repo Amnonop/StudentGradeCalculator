@@ -35,9 +35,13 @@ int getExamGrade(char* grades_directory);
 int calculateFinalGrade(float hw_grade, int midterm_grade, int exam_grade);
 DWORD WINAPI midtermGradeThread(LPVOID lpParam);
 DWORD WINAPI getExamGradeThread(LPVOID lpParam);
-DWORD WINAPI hwGradeThread(LPVOID lpParam);
 
-typedef struct hw_thread_params_t
+DWORD WINAPI hwGradeThread(LPVOID lpParam);
+EXIT_CODE getHomeworkGrade(char* grades_directory, int hw_id);
+
+EXIT_CODE readGradeFromFile(const char *grades_directory, const char *grade_filename, int *grade);
+
+typedef struct _hw_thread_params
 {
 	char *grades_directory;
 	int hw_id;
@@ -51,17 +55,26 @@ int calculateGrade(char* grades_directory)
 	/*FINAL B*/
 	HANDLE p_thread_handles[NUM_THREADS];
 	DWORD p_thread_ids[NUM_THREADS];
+	hw_thread_params thread_params;
 	DWORD wait_code;
 	BOOL ret_val;
-	int i;
+	int i = 0;
+	int hw_id = 0;
 
 	// Create two threads: Midterm , Exam A,B
 	p_thread_handles[0] = createThreadSimple(midtermGradeThread, grades_directory, &p_thread_ids[0]);
 	p_thread_handles[1] = createThreadSimple(getExamGradeThread, grades_directory, &p_thread_ids[1]);
-	//for (size_t i = 2; i < NUM_THREADS; i++)
-	//{
-	//	p_thread_handles[i] = createThreadSimple(midtermGradeThread, grades_directory, &p_thread_ids[i]);
-	//}
+
+	// Homework grades threads
+	for (i = 2; i < NUM_THREADS; i++)
+	{
+		// Create thread parameters
+		thread_params.grades_directory = grades_directory;
+		thread_params.hw_id = hw_id;
+		hw_id++;
+		
+		p_thread_handles[i] = createThreadSimple(hwGradeThread, &thread_params, &p_thread_ids[i]);
+	}
 
 	// Wait for all threads to terminate
 	wait_code = WaitForMultipleObjects(2, p_thread_handles, true, INFINITE);
@@ -82,7 +95,7 @@ int calculateGrade(char* grades_directory)
 	printf("final_grade %d", final_grade);
 
 	// Close thread handles
-	for (i = 0; i < 2; i++)
+	for (i = 0; i < NUM_THREADS; i++)
 	{
 		ret_val = CloseHandle(p_thread_handles[i]);
 		if (!ret_val)
@@ -126,7 +139,7 @@ float getHomeWorkGrade(char* grades_directory)
 DWORD WINAPI hwGradeThread(LPVOID lpParam)
 {
 	hw_thread_params *thread_params;
-	ERROR_CODE error_code;
+	EXIT_CODE EXIT_CODE;
 	char* grades_directory;
 	int curr_hw_grade = 0;
 
@@ -135,25 +148,25 @@ DWORD WINAPI hwGradeThread(LPVOID lpParam)
 
 	thread_params = (hw_thread_params*)lpParam;
 
-	error_code = getHomeworkGrade(thread_params->grades_directory, thread_params->hw_id);
-	return error_code;
+	EXIT_CODE = getHomeworkGrade(thread_params->grades_directory, thread_params->hw_id);
+	return EXIT_CODE;
 }
 
-ERROR_CODE getHomeworkGrade(char* grades_directory, int hw_id)
+EXIT_CODE getHomeworkGrade(char* grades_directory, int hw_id)
 {
 	char *hw_file_path;
 	int filename_length;
 	int hw_grade = 0;
-	ERROR_CODE error_code;
+	EXIT_CODE EXIT_CODE;
 
 	/*filename_length = strlen(grades_directory) + 2 + HW_FILENAME_LENGTH + 1;
 	hw_file_path = (char*)malloc(sizeof(char)*filename_length);
 	sprintf_s(hw_file_path, filename_length, "%s\\%s", grades_directory, hw_file_names[hw_id]);*/
 
-	error_code = readGradeFromFile(grades_directory, hw_file_names[hw_id], &hw_grade);
+	EXIT_CODE = readGradeFromFile(grades_directory, hw_file_names[hw_id], &hw_grade);
 
-	if (error_code != 0)
-		return error_code;
+	if (EXIT_CODE != 0)
+		return EXIT_CODE;
 
 	//hw_grade = getGradeFromFile(hw_file_path);
 	//free(hw_file_path);
@@ -167,21 +180,21 @@ ERROR_CODE getHomeworkGrade(char* grades_directory, int hw_id)
 	return 0;
 }
 
-ERROR_CODE readGradeFromFile(const char *grades_directory, const char *grade_filename, int *grade)
+EXIT_CODE readGradeFromFile(const char *grades_directory, const char *grade_filename, int *grade)
 {
 	char *grade_file_path;
 	int filename_length;
-	ERROR_CODE error_code;
+	EXIT_CODE EXIT_CODE;
 
 	filename_length = strlen(grades_directory) + 2 + strlen(grade_filename) + 1;
 	grade_file_path = (char*)malloc(sizeof(char)*filename_length);
 	sprintf_s(grade_file_path, filename_length, "%s//%s", grades_directory, grade_filename);
 
-	error_code = readFromFile(grade_file_path, grade);
+	EXIT_CODE = readFromFile(grade_file_path, grade);
 
 	free(grade_file_path);
 	
-	return error_code;
+	return EXIT_CODE;
 }
 
 DWORD WINAPI midtermGradeThread(LPVOID lpParam)

@@ -21,14 +21,14 @@ int getGradeFromFile(char* filename)
 	return sub_grade;
 }
 
-ERROR_CODE readFromFile(char *filename, int *value)
+EXIT_CODE readFromFile(char *filename, int *value)
 {
 	FILE *file;
-	errno_t error_code;
+	errno_t EXIT_CODE;
 
-	error_code = fopen_s(&file, filename, "r");
+	EXIT_CODE = fopen_s(&file, filename, "r");
 
-	if (error_code != 0)
+	if (EXIT_CODE != 0)
 	{
 		printf("An error occured while openning file %s for reading.", filename);
 		return ERROR_OPEN_FILE;
