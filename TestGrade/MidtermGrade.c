@@ -1,3 +1,6 @@
+#include "Commons.h"
+#include "FileHandle.h"
+
 #define MIDTERM_FILENAME_LENGTH 11
 
 int getMidtermGrade(char* grades_directory)

@@ -5,10 +5,10 @@
 #include <errno.h>
 #include <math.h>
 #include <windows.h>
+#include "TestGrade.h"
+#include "Commons.h"
 #include "FileHandle.h"
 
-#define FAIL_THRESHOLD 60
-#define NUM_OF_HW 10
 #define HW_FILENAME_LENGTH 9
 #define NUM_OF_CALC_HW 8
 #define EXAM_FILENAME_LENGTH 9

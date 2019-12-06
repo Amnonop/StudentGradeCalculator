@@ -121,6 +121,7 @@
     <ClCompile Include="TestGrade.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Commons.h" />
     <ClInclude Include="FileHandle.h" />
     <ClInclude Include="TestGrade.h" />
   </ItemGroup>
