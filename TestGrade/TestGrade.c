@@ -37,6 +37,12 @@ DWORD WINAPI midtermGradeThread(LPVOID lpParam);
 DWORD WINAPI getExamGradeThread(LPVOID lpParam);
 DWORD WINAPI hwGradeThread(LPVOID lpParam);
 
+typedef struct hw_thread_params_t
+{
+	char *grades_directory;
+	int hw_id;
+} hw_thread_params;
+
 int calculateGrade(char* grades_directory)
 {
 	/*10 HW*/
@@ -62,7 +68,7 @@ int calculateGrade(char* grades_directory)
 	if ((wait_code == WAIT_TIMEOUT) || (wait_code == WAIT_FAILED))
 	{
 		printf("Error waiting for Midterm thread.\n");
-		return ERROR_CODE;
+		return ERROR_WAITING_FOR_THREADS;
 	}
 
 	/*Calculate HW total grade*/
@@ -82,7 +88,7 @@ int calculateGrade(char* grades_directory)
 		if (!ret_val)
 		{
 			printf("Error when closing thread.\n");
-			return ERROR_CODE;
+			return ERROR_CLOSING_THREAD;
 		}
 	}
 
@@ -119,11 +125,63 @@ float getHomeWorkGrade(char* grades_directory)
 
 DWORD WINAPI hwGradeThread(LPVOID lpParam)
 {
+	hw_thread_params *thread_params;
+	ERROR_CODE error_code;
 	char* grades_directory;
 	int curr_hw_grade = 0;
-	grades_directory = (char*)lpParam;
-	curr_hw_grade = getGradeFromFile(grades_directory);//GLOBAL
-	return (curr_hw_grade);
+
+	if (!lpParam)
+		return ERROR_LPPARAM_NULL;
+
+	thread_params = (hw_thread_params*)lpParam;
+
+	error_code = getHomeworkGrade(thread_params->grades_directory, thread_params->hw_id);
+	return error_code;
+}
+
+ERROR_CODE getHomeworkGrade(char* grades_directory, int hw_id)
+{
+	char *hw_file_path;
+	int filename_length;
+	int hw_grade = 0;
+	ERROR_CODE error_code;
+
+	/*filename_length = strlen(grades_directory) + 2 + HW_FILENAME_LENGTH + 1;
+	hw_file_path = (char*)malloc(sizeof(char)*filename_length);
+	sprintf_s(hw_file_path, filename_length, "%s\\%s", grades_directory, hw_file_names[hw_id]);*/
+
+	error_code = readGradeFromFile(grades_directory, hw_file_names[hw_id], &hw_grade);
+
+	if (error_code != 0)
+		return error_code;
+
+	//hw_grade = getGradeFromFile(hw_file_path);
+	//free(hw_file_path);
+
+	if (hw_grade < FAIL_THRESHOLD)
+		hw_grade = 0;
+
+	// This section should be locked
+	hw_grades[hw_id] = hw_grade;
+
+	return 0;
+}
+
+ERROR_CODE readGradeFromFile(const char *grades_directory, const char *grade_filename, int *grade)
+{
+	char *grade_file_path;
+	int filename_length;
+	ERROR_CODE error_code;
+
+	filename_length = strlen(grades_directory) + 2 + strlen(grade_filename) + 1;
+	grade_file_path = (char*)malloc(sizeof(char)*filename_length);
+	sprintf_s(grade_file_path, filename_length, "%s//%s", grades_directory, grade_filename);
+
+	error_code = readFromFile(grade_file_path, grade);
+
+	free(grade_file_path);
+	
+	return error_code;
 }
 
 DWORD WINAPI midtermGradeThread(LPVOID lpParam)
