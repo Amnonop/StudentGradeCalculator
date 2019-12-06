@@ -16,7 +16,7 @@
 #define HW_FILENAME_LENGTH 9
 #define NUM_OF_CALC_HW 8
 #define EXAM_FILENAME_LENGTH 9
-#define NUM_THREADS 13
+#define NUM_THREADS 12
 #define BRUTAL_TERMINATION_CODE 0x55
 
 /*global variables*/
@@ -95,12 +95,12 @@ int calculateGrade(char* grades_directory)
 	if ((wait_code == WAIT_TIMEOUT) || (wait_code == WAIT_FAILED))
 	{
 		printf("Error waiting for Midterm thread.\n");
-		return ERROR_WAITING_FOR_THREADS; // Should not return w/o cleanup
+		return TG_THREADS_WAIT_FAILED; // Should not return w/o cleanup
 	}
 
 	/*Calculate HW total grade*/
-	float hw_grade = getHomeWorkGrade(grades_directory);
-	printf("hw_grade %f", hw_grade);
+	float hw_grade = 90;//getHomeWorkGrade(grades_directory);
+	//printf("hw_grade %f", hw_grade);
 	//int midterm_grade = getMidtermGrade(grades_directory);
 	printf("hmidterm_grade %d", midterm_grade);
 	//int exam_grade = getExamGrade(grades_directory);
