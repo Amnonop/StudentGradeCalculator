@@ -6,6 +6,7 @@
 #include <math.h>
 #include <windows.h>
 #include <stdbool.h>
+#include <tchar.h>
 #include "TestGrade.h"
 #include "Commons.h"
 #include "FileHandle.h"
@@ -37,14 +38,19 @@ DWORD WINAPI midtermGradeThread(LPVOID lpParam);
 DWORD WINAPI getExamGradeThread(LPVOID lpParam);
 
 DWORD WINAPI hwGradeThread(LPVOID lpParam);
-EXIT_CODE getHomeworkGrade(char* grades_directory, int hw_id);
+EXIT_CODE getHomeworkGrade(char* grades_directory, int hw_id, HANDLE hw_mutex_handle);
+EXIT_CODE updateHWGrade(int hw_id, int hw_grade, HANDLE hw_mutex_handle);
 
 EXIT_CODE readGradeFromFile(const char *grades_directory, const char *grade_filename, int *grade);
+
+EXIT_CODE createHWMutex(HANDLE **mutex_handle);
+HANDLE createMutexSimple(LPCTSTR mutex_name);
 
 typedef struct _hw_thread_params
 {
 	char *grades_directory;
 	int hw_id;
+	HANDLE hw_mutex_handle;
 } hw_thread_params;
 
 int calculateGrade(char* grades_directory)
@@ -53,13 +59,20 @@ int calculateGrade(char* grades_directory)
 	/*MIDTERM*/
 	/*FINAL A*/
 	/*FINAL B*/
+	HANDLE hw_mutex_handle;
 	HANDLE p_thread_handles[NUM_THREADS];
 	DWORD p_thread_ids[NUM_THREADS];
 	hw_thread_params thread_params;
 	DWORD wait_code;
 	BOOL ret_val;
+	EXIT_CODE exit_code;
 	int i = 0;
 	int hw_id = 0;
+
+	// Create mutex
+	exit_code = createHWMutex(&hw_mutex_handle);
+	if (exit_code != 0)
+		return exit_code;
 
 	// Create two threads: Midterm , Exam A,B
 	p_thread_handles[0] = createThreadSimple(midtermGradeThread, grades_directory, &p_thread_ids[0]);
@@ -71,6 +84,7 @@ int calculateGrade(char* grades_directory)
 		// Create thread parameters
 		thread_params.grades_directory = grades_directory;
 		thread_params.hw_id = hw_id;
+		thread_params.hw_mutex_handle = hw_mutex_handle;
 		hw_id++;
 		
 		p_thread_handles[i] = createThreadSimple(hwGradeThread, &thread_params, &p_thread_ids[i]);
@@ -81,7 +95,7 @@ int calculateGrade(char* grades_directory)
 	if ((wait_code == WAIT_TIMEOUT) || (wait_code == WAIT_FAILED))
 	{
 		printf("Error waiting for Midterm thread.\n");
-		return ERROR_WAITING_FOR_THREADS;
+		return ERROR_WAITING_FOR_THREADS; // Should not return w/o cleanup
 	}
 
 	/*Calculate HW total grade*/
@@ -105,9 +119,36 @@ int calculateGrade(char* grades_directory)
 		}
 	}
 
+	// Close mutex handle
+	CloseHandle(hw_mutex_handle);
+
 	// TODO: Print grade to file
 
 	return 0;
+}
+
+EXIT_CODE createHWMutex(HANDLE **mutex_handle)
+{
+	char hw_mutex_name[] = "hw_mutex";
+
+	mutex_handle = createMutexSimple(hw_mutex_name);
+	if (mutex_handle == NULL)
+	{
+		printf("Error creating mutex: %d\n", GetLastError());
+		CloseHandle(mutex_handle);
+		return ERROR_MUTEX_CREATE_FAILED;
+	}
+
+	return 0;
+}
+
+HANDLE createMutexSimple(LPCTSTR mutex_name)
+{
+	return CreateMutex(
+		NULL,
+		FALSE,
+		mutex_name
+	);
 }
 
 float getHomeWorkGrade(char* grades_directory)
@@ -148,25 +189,25 @@ DWORD WINAPI hwGradeThread(LPVOID lpParam)
 
 	thread_params = (hw_thread_params*)lpParam;
 
-	EXIT_CODE = getHomeworkGrade(thread_params->grades_directory, thread_params->hw_id);
+	EXIT_CODE = getHomeworkGrade(thread_params->grades_directory, thread_params->hw_id, thread_params->hw_mutex_handle);
 	return EXIT_CODE;
 }
 
-EXIT_CODE getHomeworkGrade(char* grades_directory, int hw_id)
+EXIT_CODE getHomeworkGrade(char* grades_directory, int hw_id, HANDLE hw_mutex_handle)
 {
 	char *hw_file_path;
 	int filename_length;
 	int hw_grade = 0;
-	EXIT_CODE EXIT_CODE;
+	EXIT_CODE exit_code;
 
 	/*filename_length = strlen(grades_directory) + 2 + HW_FILENAME_LENGTH + 1;
 	hw_file_path = (char*)malloc(sizeof(char)*filename_length);
 	sprintf_s(hw_file_path, filename_length, "%s\\%s", grades_directory, hw_file_names[hw_id]);*/
 
-	EXIT_CODE = readGradeFromFile(grades_directory, hw_file_names[hw_id], &hw_grade);
+	exit_code = readGradeFromFile(grades_directory, hw_file_names[hw_id], &hw_grade);
 
-	if (EXIT_CODE != 0)
-		return EXIT_CODE;
+	if (exit_code != 0)
+		return exit_code;
 
 	//hw_grade = getGradeFromFile(hw_file_path);
 	//free(hw_file_path);
@@ -175,7 +216,33 @@ EXIT_CODE getHomeworkGrade(char* grades_directory, int hw_id)
 		hw_grade = 0;
 
 	// This section should be locked
+	exit_code = updateHWGrade(hw_id, hw_grade, hw_mutex_handle);
+	if (exit_code != 0)
+		return exit_code;
+
+	return 0;
+}
+
+EXIT_CODE updateHWGrade(int hw_id, int hw_grade, HANDLE hw_mutex_handle)
+{
+	DWORD wait_mutex_result;
+	BOOL release_mutex_result;
+
+	wait_mutex_result = WaitForSingleObject(hw_mutex_handle, INFINITE);
+	if (wait_mutex_result != WAIT_OBJECT_0)
+	{
+		if (wait_mutex_result == WAIT_ABANDONED)
+			return ERROR_MUTEX_ABANDONED;
+		else
+			return ERROR_MUTEX_WAIT_FAILED;
+	}
+
+	// Crtical section start
 	hw_grades[hw_id] = hw_grade;
+
+	release_mutex_result = ReleaseMutex(hw_mutex_handle);
+	if (release_mutex_result == FALSE)
+		return ERROR_MUTEX_RELEASE_FAILED;
 
 	return 0;
 }

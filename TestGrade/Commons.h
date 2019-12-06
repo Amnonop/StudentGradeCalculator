@@ -11,5 +11,9 @@ typedef int EXIT_CODE;
 #define ERROR_OPEN_FILE ((int)(-3))
 #define ERROR_LPPARAM_NULL ((int)(-4))
 #define ERROR_CREATING_THREAD ((int)(-5))
+#define ERROR_MUTEX_CREATE_FAILED -6
+#define ERROR_MUTEX_ABANDONED -7
+#define ERROR_MUTEX_WAIT_FAILED -8
+#define ERROR_MUTEX_RELEASE_FAILED -9;
 
 #endif
