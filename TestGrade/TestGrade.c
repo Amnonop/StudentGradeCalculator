@@ -5,12 +5,12 @@
 #include <errno.h>
 #include <math.h>
 #include <windows.h>
+#include "FileHandle.h"
 
 #define FAIL_THRESHOLD 60
 #define NUM_OF_HW 10
 #define HW_FILENAME_LENGTH 9
 #define NUM_OF_CALC_HW 8
-#define MIDTERM_FILENAME_LENGTH 11
 #define EXAM_FILENAME_LENGTH 9
 #define NUM_THREADS 13
 #define BRUTAL_TERMINATION_CODE 0x55
@@ -32,7 +32,6 @@ char* hw_file_names[NUM_OF_HW] =
 "ex07.txt", "ex08.txt", "ex09.txt", "ex10.txt" };
 
 /*declerations*/
-int getGradeFromFile(char* filename);
 float getHomeWorkGrade(char* grades_directory);
 void sortArray(int* hw_grades[NUM_OF_HW]);
 int getMidtermGrade(char* grades_directory);
@@ -157,22 +156,7 @@ DWORD WINAPI getExamGradeThread(LPVOID lpParam)
 }
 
 
-int getMidtermGrade(char* grades_directory)
-{
-	int midterm_grade;
-	char* midterm_file_name = "midterm.txt";
-	char* curr_file_path;
-	int directory_path_length = strlen(grades_directory);
-	int filename_length = directory_path_length + 1 + MIDTERM_FILENAME_LENGTH + 1;
 
-	curr_file_path = (char*)malloc(sizeof(char)*filename_length);
-	sprintf_s(curr_file_path, filename_length, "%s\\%s", grades_directory, midterm_file_name);
-	midterm_grade = getGradeFromFile(curr_file_path);
-	if (midterm_grade < FAIL_THRESHOLD)
-		midterm_grade = 0;
-	free(curr_file_path);
-	return midterm_grade;
-}
 
 int getExamGrade(char* grades_directory)
 {
@@ -203,24 +187,7 @@ int getExamGrade(char* grades_directory)
 	return (exam_grade);
 }
 
-int getGradeFromFile(char* filename)
-{
-	int sub_grade = 0;
-	FILE *fp;
-	errno_t error;
-	error = fopen_s(&fp, filename, "r");
 
-	if (error != 0)
-		printf("An error occured while openning file %s for writing.", filename);
-
-	else if (fp)
-	{
-		fscanf_s(fp, "%d", &sub_grade);
-		fclose(fp);
-	}
-
-	return sub_grade;
-}
 
 int getGradeFromFile2(char* filename)
 {

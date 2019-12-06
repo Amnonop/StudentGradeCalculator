@@ -21,9 +21,18 @@
     <ClCompile Include="TestGrade.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MidtermGrade.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FileHandle.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TestGrade.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FileHandle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
