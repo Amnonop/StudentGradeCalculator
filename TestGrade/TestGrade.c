@@ -129,6 +129,8 @@ DWORD WINAPI hwGradeThread(LPVOID lpParam)
 DWORD WINAPI midtermGradeThread(LPVOID lpParam)
 {
 	char* grades_directory;
+
+	Sleep(10);
 	grades_directory = (char*)lpParam;
 	midterm_grade = getMidtermGrade(grades_directory);//GLOBAL
 }
