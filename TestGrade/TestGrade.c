@@ -5,9 +5,11 @@
 #include <errno.h>
 #include <math.h>
 #include <windows.h>
+#include <stdbool.h>
 #include "TestGrade.h"
 #include "Commons.h"
 #include "FileHandle.h"
+#include "MidtermGrade.h"
 #include "ThreadHandle.h"
 
 #define HW_FILENAME_LENGTH 9
@@ -20,12 +22,7 @@
 static int midterm_grade = 0;
 static int exam_grade = 0;
 static int hw_grades[NUM_OF_HW] = { 0 };
-//static int hw_grades[NUM_OF_HW] = { 0 };
-HANDLE p_thread_handles[NUM_THREADS];
-DWORD p_thread_ids[NUM_THREADS];
-DWORD wait_code;
-BOOL ret_val;
-size_t i;
+
 char* hw_file_names[NUM_OF_HW] =
 { "ex01.txt","ex02.txt","ex03.txt",
 "ex04.txt", "ex05.txt", "ex06.txt",
@@ -34,7 +31,6 @@ char* hw_file_names[NUM_OF_HW] =
 /*declerations*/
 float getHomeWorkGrade(char* grades_directory);
 void sortArray(int* hw_grades[NUM_OF_HW]);
-int getMidtermGrade(char* grades_directory);
 int getExamGrade(char* grades_directory);
 int calculateFinalGrade(float hw_grade, int midterm_grade, int exam_grade);
 DWORD WINAPI midtermGradeThread(LPVOID lpParam);
@@ -47,6 +43,12 @@ int calculateGrade(char* grades_directory)
 	/*MIDTERM*/
 	/*FINAL A*/
 	/*FINAL B*/
+	HANDLE p_thread_handles[NUM_THREADS];
+	DWORD p_thread_ids[NUM_THREADS];
+	DWORD wait_code;
+	BOOL ret_val;
+	int i;
+
 	// Create two threads: Midterm , Exam A,B
 	p_thread_handles[0] = createThreadSimple(midtermGradeThread, grades_directory, &p_thread_ids[0]);
 	p_thread_handles[1] = createThreadSimple(getExamGradeThread, grades_directory, &p_thread_ids[1]);
@@ -54,6 +56,15 @@ int calculateGrade(char* grades_directory)
 	//{
 	//	p_thread_handles[i] = createThreadSimple(midtermGradeThread, grades_directory, &p_thread_ids[i]);
 	//}
+
+	// Wait for all threads to terminate
+	wait_code = WaitForMultipleObjects(2, p_thread_handles, true, INFINITE);
+	if ((wait_code == WAIT_TIMEOUT) || (wait_code == WAIT_FAILED))
+	{
+		printf("Error waiting for Midterm thread.\n");
+		return ERROR_CODE;
+	}
+
 	/*Calculate HW total grade*/
 	float hw_grade = getHomeWorkGrade(grades_directory);
 	printf("hw_grade %f", hw_grade);
@@ -63,6 +74,21 @@ int calculateGrade(char* grades_directory)
 	printf("exam_grade %d", exam_grade);
 	int final_grade = calculateFinalGrade(hw_grade, midterm_grade, exam_grade);
 	printf("final_grade %d", final_grade);
+
+	// Close thread handles
+	for (i = 0; i < 2; i++)
+	{
+		ret_val = CloseHandle(p_thread_handles[i]);
+		if (!ret_val)
+		{
+			printf("Error when closing thread.\n");
+			return ERROR_CODE;
+		}
+	}
+
+	// TODO: Print grade to file
+
+	return 0;
 }
 
 float getHomeWorkGrade(char* grades_directory)
@@ -75,8 +101,8 @@ float getHomeWorkGrade(char* grades_directory)
 	{
 		curr_file_path = (char*)malloc(sizeof(char)*filename_length);
 		sprintf_s(curr_file_path, filename_length, "%s\\%s", grades_directory, hw_file_names[i]);
-		p_thread_handles[i + 2] = (int)createThreadSimple(getGradeFromFile, grades_directory, &p_thread_ids[i + 2]);
-		//hw_grades[i] = getGradeFromFile(curr_file_path);
+		//p_thread_handles[i + 2] = createThreadSimple(getGradeFromFile, grades_directory, &p_thread_ids[i + 2]);
+		hw_grades[i] = getGradeFromFile(curr_file_path);
 		free(curr_file_path);
 	}
 

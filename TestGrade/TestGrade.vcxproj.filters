@@ -44,5 +44,8 @@
     <ClInclude Include="ThreadHandle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MidtermGrade.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

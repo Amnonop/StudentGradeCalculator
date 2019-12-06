@@ -124,6 +124,7 @@
   <ItemGroup>
     <ClInclude Include="Commons.h" />
     <ClInclude Include="FileHandle.h" />
+    <ClInclude Include="MidtermGrade.h" />
     <ClInclude Include="TestGrade.h" />
     <ClInclude Include="ThreadHandle.h" />
   </ItemGroup>

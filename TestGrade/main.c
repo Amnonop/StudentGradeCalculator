@@ -2,7 +2,7 @@
 
 int main()
 {
-	char* grades_directory = "C:\\Users\\ophir\\source\\repos\\StudentGradeCalculator\\Debug\\grades_123456789";
+	char* grades_directory = "grades_123456789";
 	
 	calculateGrade(grades_directory);
 
