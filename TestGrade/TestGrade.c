@@ -33,6 +33,7 @@ EXIT_CODE createHWMutex(HANDLE mutex_handle);
 HANDLE createMutexSimple(LPCTSTR mutex_name);
 
 EXIT_CODE writeFinalGradeToFile(const char *grades_directory, int final_grade);
+BOOL closeThreadHandles(HANDLE thread_handles[], int thread_count);
 
 typedef struct _hw_thread_params
 {
@@ -50,8 +51,11 @@ int calculateGrade(char* grades_directory)
 	/*FINAL B*/
 	char hw_mutex_name[] = "hw_mutex";
 	HANDLE hw_mutex_handle;
-	HANDLE p_thread_handles[NUM_THREADS];
-	DWORD p_thread_ids[NUM_THREADS];
+	
+	HANDLE thread_handles[NUM_THREADS];
+	DWORD thread_ids[NUM_THREADS];
+	int thread_count = 0;
+	
 	int hw_grades[NUM_OF_HW] = { 0 };
 	hw_thread_params thread_params[NUM_OF_HW];
 	DWORD wait_code;
@@ -61,6 +65,7 @@ int calculateGrade(char* grades_directory)
 	int hw_id = 0;
 	float hw_grade = 0.0;
 	int final_grade = 0;
+	BOOL has_errors = FALSE;
 
 	// Create mutex
 	hw_mutex_handle = createMutexSimple(hw_mutex_name);
@@ -72,8 +77,14 @@ int calculateGrade(char* grades_directory)
 	}
 
 	// Create two threads: Midterm , Exam A,B
-	p_thread_handles[0] = createThreadSimple(midtermGradeThread, grades_directory, &p_thread_ids[0]);
-	p_thread_handles[1] = createThreadSimple(getExamGradeThread, grades_directory, &p_thread_ids[1]);
+	thread_handles[0] = createThreadSimple(midtermGradeThread, grades_directory, &thread_ids[0]);
+	if (thread_handles[0] == NULL)
+	{
+		printf("Failed to create thread.\n");
+		// Cleanup
+		return TG_THREAD_CREATE_FAILED;
+	}
+	thread_handles[1] = createThreadSimple(getExamGradeThread, grades_directory, &thread_ids[1]);
 
 	// Homework grades threads
 	for (i = 2; i < NUM_THREADS; i++)
@@ -84,9 +95,9 @@ int calculateGrade(char* grades_directory)
 		thread_params[hw_id].hw_grades = hw_grades;
 		thread_params[hw_id].hw_mutex_handle = hw_mutex_handle;
 		
-		p_thread_handles[i] = createThreadSimple(hwGradeThread, &(thread_params[hw_id]), &p_thread_ids[i]);
+		thread_handles[i] = createThreadSimple(hwGradeThread, &(thread_params[hw_id]), &thread_ids[i]);
 		hw_id++;
-		if (p_thread_handles[i] == NULL)
+		if (thread_handles[i] == NULL)
 		{
 			// TODO: Before returning should close all open handles!!!
 			return TG_THREAD_CREATE_FAILED;
@@ -94,12 +105,20 @@ int calculateGrade(char* grades_directory)
 	}
 
 	// Wait for all threads to terminate
-	wait_code = WaitForMultipleObjects(NUM_THREADS, p_thread_handles, true, INFINITE);
+	wait_code = WaitForMultipleObjects(NUM_THREADS, thread_handles, true, INFINITE);
 	if ((wait_code == WAIT_TIMEOUT) || (wait_code == WAIT_FAILED))
 	{
 		printf("Error waiting for threads to finish.\n");
 		return TG_THREADS_WAIT_FAILED; // Should not return w/o cleanup
 	}
+
+	// Close mutex handle
+	CloseHandle(hw_mutex_handle);
+
+	// Close thread handles
+	has_errors = closeThreadHandles(thread_handles, thread_count);
+	if (has_errors == TRUE)
+		return TG_THREAD_ERRORS_OCCURED;
 
 	printf("hmidterm_grade %d\n", midterm_grade);
 	printf("exam_grade %d\n", exam_grade);
@@ -110,20 +129,6 @@ int calculateGrade(char* grades_directory)
 	
 	final_grade = calculateFinalGrade(hw_grade, midterm_grade, exam_grade);
 	printf("final_grade %d\n", final_grade);
-
-	// Close thread handles
-	for (i = 0; i < NUM_THREADS; i++)
-	{
-		ret_val = CloseHandle(p_thread_handles[i]);
-		if (!ret_val)
-		{
-			printf("Error when closing thread.\n");
-			return ERROR_CLOSING_THREAD;
-		}
-	}
-
-	// Close mutex handle
-	CloseHandle(hw_mutex_handle);
 
 	// TODO: Print grade to file
 	exit_code = writeFinalGradeToFile(grades_directory, final_grade);
@@ -242,4 +247,24 @@ int calculateFinalGrade(float hw_grade, int midterm_grade, int exam_grade)
 	float final_grade = 0;
 	final_grade = 0.2*hw_grade + 0.2*midterm_grade + 0.6*exam_grade;
 	return ceil(final_grade);
+}
+
+BOOL closeThreadHandles(HANDLE thread_handles[], int thread_count)
+{
+	BOOL has_errors = FALSE;
+	int i = 0;
+	int thread_exit_code = 0;
+
+	for (i = 0; i < thread_count; i++)
+	{
+		GetExitCodeThread(thread_handles[i], &thread_exit_code);
+		printf("Thread %d ended with exit code 0x%x\n", i, thread_exit_code);
+		
+		if (thread_exit_code != TG_SUCCESS)
+			has_errors = TRUE;
+
+		CloseHandle(thread_handles[i]);
+	}
+
+	return has_errors;
 }
