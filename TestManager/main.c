@@ -36,7 +36,7 @@ static int exam_grade = 0;
 
 /*declerations*/
 int openGradeFile();
-void printGradeFile(int id, int grade);
+int printGradeFile(int id, int grade);
 int CreateProcessSimpleMain(char* student_id);
 BOOL CreateProcessSimple(LPTSTR command_line, PROCESS_INFORMATION *process_info_ptr);
 int gradeSingleStudent(char* student_id);
@@ -52,6 +52,9 @@ int main()
 	/*process for every student*/
 	/*print their supid messages*/
 	/*save grades in files*/
+	char* curr_student_id = NULL;
+	/*while ID in DIR*/
+	gradeSingleStudent(curr_student_id);
 
 	file_handle_return_code = openGradeFile(final_grade_filename);
 	if (file_handle_return_code != EXIT_SUCCESS)
@@ -161,7 +164,7 @@ int openGradeFile()
 	return EXIT_SUCCESS;
 }
 
-void printGradeFile(int id, int grade)
+int printGradeFile(int id, int grade)
 {
 	/*appends grades to final grades file*/
 	FILE *fp;
@@ -179,6 +182,7 @@ void printGradeFile(int id, int grade)
 		fprintf_s(fp, "%d %d\n", id, grade);
 		fclose(fp);
 	}
+	return EXIT_SUCCESS;
 }
 
 /*
