@@ -30,7 +30,7 @@ char* hw_file_names[NUM_OF_HW] =
 "ex07.txt", "ex08.txt", "ex09.txt", "ex10.txt" };
 
 /*declerations*/
-float getHomeWorkGrade(char* grades_directory);
+float calculateHomeworkGrade(int homework_grades[]);
 void sortArray(int* hw_grades[NUM_OF_HW]);
 int getExamGrade(char* grades_directory);
 int calculateFinalGrade(float hw_grade, int midterm_grade, int exam_grade);
@@ -69,6 +69,8 @@ int calculateGrade(char* grades_directory)
 	EXIT_CODE exit_code;
 	int i = 0;
 	int hw_id = 0;
+	float hw_grade = 0.0;
+	int final_grade = 0;
 
 	// Create mutex
 	hw_mutex_handle = createMutexSimple(hw_mutex_name);
@@ -109,15 +111,15 @@ int calculateGrade(char* grades_directory)
 		return TG_THREADS_WAIT_FAILED; // Should not return w/o cleanup
 	}
 
+	printf("hmidterm_grade %d\n", midterm_grade);
+	printf("exam_grade %d\n", exam_grade);
+
 	/*Calculate HW total grade*/
-	float hw_grade = 90;//getHomeWorkGrade(grades_directory);
-	//printf("hw_grade %f", hw_grade);
-	//int midterm_grade = getMidtermGrade(grades_directory);
-	printf("hmidterm_grade %d", midterm_grade);
-	//int exam_grade = getExamGrade(grades_directory);
-	printf("exam_grade %d", exam_grade);
-	int final_grade = calculateFinalGrade(hw_grade, midterm_grade, exam_grade);
-	printf("final_grade %d", final_grade);
+	hw_grade = calculateHomeworkGrade(hw_grades);
+	printf("hw_grade %f\n", hw_grade);
+	
+	final_grade = calculateFinalGrade(hw_grade, midterm_grade, exam_grade);
+	printf("final_grade %d\n", final_grade);
 
 	// Close thread handles
 	for (i = 0; i < NUM_THREADS; i++)
@@ -162,29 +164,18 @@ HANDLE createMutexSimple(LPCTSTR mutex_name)
 	);
 }
 
-float getHomeWorkGrade(char* grades_directory)
+float calculateHomeworkGrade(int homework_grades[])
 {
 	int i = 0;
-	char* curr_file_path;
-	int directory_path_length = strlen(grades_directory);
-	int filename_length = directory_path_length + 1 + HW_FILENAME_LENGTH + 1;
-	for (int i = 0; i < NUM_OF_HW; i++)
-	{
-		curr_file_path = (char*)malloc(sizeof(char)*filename_length);
-		sprintf_s(curr_file_path, filename_length, "%s\\%s", grades_directory, hw_file_names[i]);
-		//p_thread_handles[i + 2] = createThreadSimple(getGradeFromFile, grades_directory, &p_thread_ids[i + 2]);
-		hw_grades[i] = getGradeFromFile(curr_file_path);
-		free(curr_file_path);
-	}
-
-	sortArray(hw_grades);
 	float hw_grade = 0;
 
-	for (int i = 0; i < NUM_OF_CALC_HW; i++)
+	sortArray(homework_grades);
+
+	for (i = 0; i < NUM_OF_CALC_HW; i++)
 	{
-		if (hw_grades[i] >= FAIL_THRESHOLD)
-			hw_grade += hw_grades[i];
+		hw_grade += homework_grades[i];
 	}
+
 	return (hw_grade / NUM_OF_CALC_HW);
 }
 
