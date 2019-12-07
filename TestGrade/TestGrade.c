@@ -81,10 +81,21 @@ int calculateGrade(char* grades_directory)
 	if (thread_handles[0] == NULL)
 	{
 		printf("Failed to create thread.\n");
-		// Cleanup
+		CloseHandle(hw_mutex_handle);
+		closeThreadHandles(thread_handles, thread_count);
 		return TG_THREAD_CREATE_FAILED;
 	}
+	thread_count++;
+
 	thread_handles[1] = createThreadSimple(getExamGradeThread, grades_directory, &thread_ids[1]);
+	if (thread_handles[1] == NULL)
+	{
+		printf("Failed to create thread.\n");
+		CloseHandle(hw_mutex_handle);
+		closeThreadHandles(thread_handles, thread_count);
+		return TG_THREAD_CREATE_FAILED;
+	}
+	thread_count++;
 
 	// Homework grades threads
 	for (i = 2; i < NUM_THREADS; i++)
@@ -99,9 +110,12 @@ int calculateGrade(char* grades_directory)
 		hw_id++;
 		if (thread_handles[i] == NULL)
 		{
-			// TODO: Before returning should close all open handles!!!
+			printf("Failed to create thread.\n");
+			CloseHandle(hw_mutex_handle);
+			closeThreadHandles(thread_handles, thread_count);
 			return TG_THREAD_CREATE_FAILED;
 		}
+		thread_count++;
 	}
 
 	// Wait for all threads to terminate
