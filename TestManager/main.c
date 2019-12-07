@@ -9,13 +9,15 @@
 
 typedef enum {
 	TM_SUCCESS,
-	TM_FILE_OPEN_FAILED
+	TM_FILE_OPEN_FAILED,
+	TM_PROCESS_CREATE_FAILED
 } EXIT_CODES;
 
 typedef int EXIT_CODE;
 
 #define ID_LENGTH 9
 #define NUM_OF_STUDENTS 10
+#define STUDENT_DIR_PREFIX_LENGTH 8
 
 #define FAIL_THRESHOLD 60
 #define NUM_OF_HW 10
@@ -46,6 +48,9 @@ int printGradeFile(int id, int grade);
 int CreateProcessSimpleMain(char* student_id);
 BOOL CreateProcessSimple(LPTSTR command_line, PROCESS_INFORMATION *process_info_ptr);
 int gradeSingleStudent(char* student_id);
+
+EXIT_CODE runGradesCalculation(const char* grades_directory);
+EXIT_CODE getStudentIdsFromFile(const char *grades_directory, const char *student_ids_filename, char *student_ids[], int *student_count);
 
 int main(int argc, char* argv)
 {
@@ -108,17 +113,42 @@ EXIT_CODE runGradesCalculation(const char* grades_directory)
 	char *student_ids[NUM_OF_STUDENTS];
 	int student_count = 0;
 	EXIT_CODE exit_code = TM_SUCCESS;
+	int process_count = 0;
+	HANDLE process_handles[NUM_OF_STUDENTS];
+	char *student_grades_directory;
+	int student_grades_directory_length = 0;
 
-	exit_code = getStudentIdsFromFile(student_ids_filename, student_ids, &student_count);
+	exit_code = getStudentIdsFromFile(grades_directory, student_ids_filename, student_ids, &student_count);
+	if (exit_code != TM_SUCCESS)
+		return exit_code;
+
+	// Open a process to check the grade of each student
+	for (process_count = 0; process_count < student_count; process_count++)
+	{
+		student_grades_directory_length = strlen(grades_directory) + STUDENT_DIR_PREFIX_LENGTH;
+		student_grades_directory = (char*)malloc(sizeof(char)*student_grades_directory_length);
+		sprintf_s(student_grades_directory, student_grades_directory_length, "%s\\grades_%s", grades_directory, student_ids[i]);
+		
+		process_handles[process_count] = createGradingProcess(student_grades_directory, process_handles[i]);
+
+		free(student_grades_directory);
+	}
 }
 
-EXIT_CODE getStudentIdsFromFile(const char *student_ids_filename, char *student_ids[], int *student_count)
+EXIT_CODE getStudentIdsFromFile(const char *grades_directory, const char *student_ids_filename, char *student_ids[], int *student_count)
 {
+	char *filename;
+	int filename_length = 0;
 	FILE *file;
 	errno_t exit_code;
 	int i = 0;
+	char student_id[ID_LENGTH + 1];
 
-	exit_code = fopen_s(&file, student_ids_filename, "r");
+	filename_length = strlen(grades_directory) + 2 + strlen(student_ids_filename) + 1;
+	filename = (char*)malloc(sizeof(char)*filename_length);
+	sprintf_s(filename, filename_length, "%s\\%s", grades_directory, student_ids_filename);
+
+	exit_code = fopen_s(&file, filename, "r");
 
 	if (exit_code != 0)
 	{
@@ -126,17 +156,46 @@ EXIT_CODE getStudentIdsFromFile(const char *student_ids_filename, char *student_
 		return TM_FILE_OPEN_FAILED;
 	}
 
-	while (fgets(student_ids[i], ID_LENGTH, file) != NULL)
+	while (fgets(student_id, ID_LENGTH + 1, file) != NULL)
 	{
+		if (strcmp(student_id, "\n") == 0)
+			continue;
+
+		student_ids[i] = (char*)malloc(sizeof(char)*(ID_LENGTH + 1));
+		strcpy_s(student_ids[i], ID_LENGTH + 1, student_id);
 		i++;
 	}
 	student_count = i;
 
 	fclose(file);
 
+	free(filename);
+
 	return TM_SUCCESS;
 }
 
+EXIT_CODE createGradingProcess(const char *student_grades_directory, HANDLE *process_handle)
+{
+	PROCESS_INFORMATION procinfo;
+	BOOL is_process_created;
+	CHAR process_name[] = "TestGrade.exe ";
+	EXIT_CODE exit_code = TM_SUCCESS;
+
+	int command_length = strlen(process_name) + strlen(student_grades_directory) + 1;
+	char* command = (char*)malloc(sizeof(char)*command_length);
+	sprintf_s(command, command_length, "TestGrade.exe %s", student_grades_directory);
+
+	is_process_created = CreateProcessSimple(command, &procinfo);
+	if (is_process_created == FALSE)
+	{
+		printf("Process Creation Failed!\n");
+		return TM_PROCESS_CREATE_FAILED;
+	}
+
+	process_handle = procinfo.hProcess;
+
+	return exit_code;
+}
 
 int gradeSingleStudent(char* student_id)
 {
