@@ -101,15 +101,10 @@ int calculateGrade(char* grades_directory)
 		return TG_THREADS_WAIT_FAILED; // Should not return w/o cleanup
 	}
 
-	printf("hmidterm_grade %d\n", midterm_grade);
-	printf("exam_grade %d\n", exam_grade);
-
 	/*Calculate HW total grade*/
 	hw_grade = calculateHomeworkGrade(hw_grades);
-	printf("hw_grade %f\n", hw_grade);
 	
 	final_grade = calculateFinalGrade(hw_grade, midterm_grade, exam_grade);
-	printf("final_grade %d\n", final_grade);
 
 	// Close thread handles
 	for (i = 0; i < NUM_THREADS; i++)
@@ -204,6 +199,7 @@ DWORD WINAPI midtermGradeThread(LPVOID lpParam)
 DWORD WINAPI getExamGradeThread(LPVOID lpParam)
 {
 	char* grades_directory;
+	Sleep(10);
 	grades_directory = (char*)lpParam;
 	exam_grade = getExamGrade(grades_directory);//GLOBAL
 }
