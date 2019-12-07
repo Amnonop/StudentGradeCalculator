@@ -7,6 +7,16 @@
 #include <windows.h>
 #include "dirent.h"
 
+typedef enum {
+	TM_SUCCESS,
+	TM_FILE_OPEN_FAILED
+} EXIT_CODES;
+
+typedef int EXIT_CODE;
+
+#define ID_LENGTH 9
+#define NUM_OF_STUDENTS 10
+
 #define FAIL_THRESHOLD 60
 #define NUM_OF_HW 10
 #define HW_FILENAME_LENGTH 9
@@ -39,7 +49,7 @@ int gradeSingleStudent(char* student_id);
 
 int main(int argc, char* argv)
 {
-	char* grades_directory = "C:\\katya\\StudentGradeCalculator\\students_grades";//argv...
+	char* grades_directory = "C:\\katya\\StudentGradeCalculator\\ex02_testing\\input";//argv...
 	char* final_grade_filename = "final_grades.txt";
 	//MALLOC - no need for an array because it is in the stack?
 	int students_grades[NUM_OF_STUDENTS] = { 0 };
@@ -51,6 +61,10 @@ int main(int argc, char* argv)
 	char* curr_student_id = NULL;
 	int student_dir_length = 0;
 	
+	EXIT_CODE exit_code = TM_SUCCESS;
+
+	exit_code = runGradesCalculation(grades_directory);
+
 	/*while ID in DIR*/
 	DIR* main_directory = opendir(grades_directory);
 	if (main_directory == NULL)
@@ -86,6 +100,41 @@ int main(int argc, char* argv)
 		}
 	}
 	return 0;
+}
+
+EXIT_CODE runGradesCalculation(const char* grades_directory)
+{
+	char *student_ids_filename = "student_ids.txt";
+	char *student_ids[NUM_OF_STUDENTS];
+	int student_count = 0;
+	EXIT_CODE exit_code = TM_SUCCESS;
+
+	exit_code = getStudentIdsFromFile(student_ids_filename, student_ids, &student_count);
+}
+
+EXIT_CODE getStudentIdsFromFile(const char *student_ids_filename, char *student_ids[], int *student_count)
+{
+	FILE *file;
+	errno_t exit_code;
+	int i = 0;
+
+	exit_code = fopen_s(&file, student_ids_filename, "r");
+
+	if (exit_code != 0)
+	{
+		printf("An error occured while openning file %s for reading.", student_ids_filename);
+		return TM_FILE_OPEN_FAILED;
+	}
+
+	while (fgets(student_ids[i], ID_LENGTH, file) != NULL)
+	{
+		i++;
+	}
+	student_count = i;
+
+	fclose(file);
+
+	return TM_SUCCESS;
 }
 
 
