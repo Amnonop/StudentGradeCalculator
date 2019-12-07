@@ -67,7 +67,7 @@ int main(int argc, char* argv)
 
 		curr_student_id = (char*)malloc(sizeof(char)*(strlen(box->d_name)+1));
 		strcpy_s(curr_student_id, 100,box->d_name);
-		box = readdir(main_directory);
+
 		gradeSingleStudent(curr_student_id);
 		free(curr_student_id);
 	}
@@ -109,7 +109,7 @@ int CreateProcessSimpleMain(char* student_id)
 	DWORD waitcode;
 	DWORD exitcode;
 	BOOL retVal;
-	CHAR process_name[] = ("TestGrade.exe ");
+	CHAR process_name[] = "TestGrade.exe ";
 
 	int command_length = strlen(student_id) + strlen(process_name) + 2;
 	char* command = (char*)malloc(sizeof(char)*command_length);
