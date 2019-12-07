@@ -15,7 +15,8 @@ typedef enum {
 	TG_MUTEX_CREATE_FAILED,
 	TG_MUTEX_ABANDONED,
 	TG_MUTEX_WAIT_FAILED,
-	TG_MUTEX_RELEASE_FAILED
+	TG_MUTEX_RELEASE_FAILED,
+	TG_NOT_ENOUGH_COMMAND_LINE_ARGUMENTS
 } EXIT_CODES;
 
 #define TG_THREADS_WAIT_FAILED ((int)(-1))
@@ -27,5 +28,10 @@ typedef enum {
 #define ERROR_MUTEX_ABANDONED -7
 #define ERROR_MUTEX_WAIT_FAILED -8
 #define ERROR_MUTEX_RELEASE_FAILED -9;
+
+/*global variables*/
+static int midterm_grade = 0;
+static int exam_grade = 0;
+//static int hw_grades[NUM_OF_HW] = { 0 };
 
 #endif
