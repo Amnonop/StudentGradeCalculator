@@ -5,6 +5,15 @@
 #define NUM_OF_ARGC 2
 #define GRADE_DIRECTORY_ARG_INDEX 1
 
+/**
+*	Calculates the total grade of the student and writes the final grade to a file.
+*	Each grade is read separately from a file by a thread. When all threads are done, the final
+*	grade is calculated and is written to a file.
+*
+*	Accepts
+*	-------
+*	grades_directory - a string representing the name of the directory containing the student's grades.
+**/
 int main(int argc, char *argv[])
 {
 	int grades_directory_length = 0;
