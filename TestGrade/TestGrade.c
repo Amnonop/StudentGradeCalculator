@@ -96,6 +96,7 @@ int calculateGrade(char* grades_directory)
 		hw_id++;
 		if (p_thread_handles[i] == NULL)
 		{
+			// TODO: Before returning should close all open handles!!!
 			return TG_THREAD_CREATE_FAILED;
 		}
 	}
@@ -104,7 +105,7 @@ int calculateGrade(char* grades_directory)
 	wait_code = WaitForMultipleObjects(NUM_THREADS, p_thread_handles, true, INFINITE);
 	if ((wait_code == WAIT_TIMEOUT) || (wait_code == WAIT_FAILED))
 	{
-		printf("Error waiting for Midterm thread.\n");
+		printf("Error waiting for threads to finish.\n");
 		return TG_THREADS_WAIT_FAILED; // Should not return w/o cleanup
 	}
 
@@ -204,22 +205,13 @@ DWORD WINAPI hwGradeThread(LPVOID lpParam)
 
 EXIT_CODE getHomeworkGrade(char* grades_directory, int hw_id, HANDLE hw_mutex_handle)
 {
-	char *hw_file_path;
-	int filename_length;
 	int hw_grade = 0;
 	EXIT_CODE exit_code;
-
-	/*filename_length = strlen(grades_directory) + 2 + HW_FILENAME_LENGTH + 1;
-	hw_file_path = (char*)malloc(sizeof(char)*filename_length);
-	sprintf_s(hw_file_path, filename_length, "%s\\%s", grades_directory, hw_file_names[hw_id]);*/
 
 	exit_code = readGradeFromFile(grades_directory, hw_file_names[hw_id], &hw_grade);
 
 	if (exit_code != 0)
 		return exit_code;
-
-	//hw_grade = getGradeFromFile(hw_file_path);
-	//free(hw_file_path);
 
 	if (hw_grade < FAIL_THRESHOLD)
 		hw_grade = 0;
@@ -229,7 +221,7 @@ EXIT_CODE getHomeworkGrade(char* grades_directory, int hw_id, HANDLE hw_mutex_ha
 	if (exit_code != 0)
 		return exit_code;
 
-	return 0;
+	return TG_SUCCESS;
 }
 
 EXIT_CODE updateHWGrade(int hw_id, int hw_grade, HANDLE hw_mutex_handle)
@@ -241,9 +233,9 @@ EXIT_CODE updateHWGrade(int hw_id, int hw_grade, HANDLE hw_mutex_handle)
 	if (wait_mutex_result != WAIT_OBJECT_0)
 	{
 		if (wait_mutex_result == WAIT_ABANDONED)
-			return ERROR_MUTEX_ABANDONED;
+			return TG_MUTEX_ABANDONED;
 		else
-			return ERROR_MUTEX_WAIT_FAILED;
+			return TG_MUTEX_WAIT_FAILED;
 	}
 
 	// Crtical section start
@@ -251,9 +243,9 @@ EXIT_CODE updateHWGrade(int hw_id, int hw_grade, HANDLE hw_mutex_handle)
 
 	release_mutex_result = ReleaseMutex(hw_mutex_handle);
 	if (release_mutex_result == FALSE)
-		return ERROR_MUTEX_RELEASE_FAILED;
+		return TG_MUTEX_RELEASE_FAILED;
 
-	return 0;
+	return TG_SUCCESS;
 }
 
 EXIT_CODE readGradeFromFile(const char *grades_directory, const char *grade_filename, int *grade)
@@ -344,26 +336,6 @@ int calculateFinalGrade(float hw_grade, int midterm_grade, int exam_grade)
 	final_grade = 0.2*hw_grade + 0.2*midterm_grade + 0.6*exam_grade;
 	return ceil(final_grade);
 }
-/*void appendToFile(char* file_path, char* sub_solution)
-{
-	FILE *fp;
-	fopen_s(&fp, file_path, "a");
-
-	if (!fp)
-		return;
-
-	char* new_line;
-	int new_line_length;
-	new_line_length = strlen(sub_solution) + 2;
-	new_line = (char*)malloc(sizeof(char) * new_line_length);
-	strcpy_s(new_line, new_line_length, sub_solution);
-	strcat_s(new_line, new_line_length, "\n");
-
-	fprintf(fp, "%s", new_line);
-	fclose(fp);
-
-	free(new_line);
-}*/
 
 void sortArray(int* hw_grades[NUM_OF_HW])
 {
