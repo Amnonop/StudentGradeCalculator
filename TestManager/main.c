@@ -37,6 +37,8 @@ EXIT_CODE appendGradeToFile(const char *filename, const char *student_id, int gr
 
 int main(int argc, char* argv[])
 {
+	/*opens a process per each students by calling runGradesCalculation()
+	return 5 if not enough arguments as described in enum */
 	int grades_directory_length = 0;
 	char *grades_directory;
 	EXIT_CODE exit_code;
@@ -57,6 +59,8 @@ int main(int argc, char* argv[])
 
 EXIT_CODE runGradesCalculation(const char* grades_directory)
 {
+	/*checks status of each process, return the status at the end of the program
+	receives grades directory and opens the functions that write final grade files and runs the testGrade*/
 	char *grades_output_filename = "final_grades.txt";
 	char *student_ids_filename = "student_ids.txt";
 	char *student_ids[NUM_OF_STUDENTS];
@@ -91,7 +95,7 @@ EXIT_CODE runGradesCalculation(const char* grades_directory)
 			return exit_code;
 		}
 	}
-
+	/*wait for all processes to finish and return their values*/
 	wait_result = WaitForMultipleObjects(student_count, process_handles, TRUE, INFINITE);
 	if (wait_result == WAIT_FAILED)
 	{
@@ -109,21 +113,20 @@ EXIT_CODE runGradesCalculation(const char* grades_directory)
 			failed_to_calc_grade = TRUE;
 			continue;
 		}
-
+		/*finally: opens grades file for all students*/
 		exit_code = writeStudentGradeToFile(grades_output_filename, grades_directory, student_ids[i]);
 	}
-
 	if (failed_to_calc_grade == FALSE)
 		printf("The grades have arrived, captain\n");
-
 	for (i = 0; i < student_count; i++)
 		free(student_ids[i]);
-
 	return exit_code;
 }
 
 EXIT_CODE getStudentIdsFromFile(const char *grades_directory, const char *student_ids_filename, char *student_ids[], int *student_count)
 {
+	/*reads students ids from directory and
+	resurns a pointer with number of students and a char* with their ids*/
 	char *filename;
 	int filename_length = 0;
 	FILE *file;
@@ -142,7 +145,7 @@ EXIT_CODE getStudentIdsFromFile(const char *grades_directory, const char *studen
 		printf("An error occured while openning file %s for reading.\n", student_ids_filename);
 		return TM_FILE_OPEN_FAILED;
 	}
-
+	/*updatind ids list*/
 	while (fgets(student_id, ID_LENGTH + 1, file) != NULL)
 	{
 		if (strcmp(student_id, "\n") == 0)
@@ -163,6 +166,8 @@ EXIT_CODE getStudentIdsFromFile(const char *grades_directory, const char *studen
 
 EXIT_CODE createGradingProcess(const char *student_grades_directory, HANDLE process_handle[], int process_index)
 {
+	/*receives directory and HANDLE +int to follow spesific process
+	returns exit code*/
 	PROCESS_INFORMATION procinfo;
 	BOOL is_process_created;
 	CHAR process_name[] = "TestGrade.exe ";
@@ -172,7 +177,7 @@ EXIT_CODE createGradingProcess(const char *student_grades_directory, HANDLE proc
 	int command_length = strlen(process_name) + strlen(student_grades_directory) + 2;
 	char* command = (char*)malloc(sizeof(char)*command_length);
 	sprintf_s(command, command_length, "TestGrade.exe %s", student_grades_directory);
-
+	/*calls basic process engine*/
 	is_process_created = createProcessSimple(command, &procinfo);
 	free(command);
 	if (is_process_created == FALSE)
@@ -180,7 +185,7 @@ EXIT_CODE createGradingProcess(const char *student_grades_directory, HANDLE proc
 		printf("Process Creation Failed!\n");
 		return TM_PROCESS_CREATE_FAILED;
 	}
-
+	/*keeps process handle*/
 	process_handle[process_index] = procinfo.hProcess;
 
 	return exit_code;
@@ -188,6 +193,8 @@ EXIT_CODE createGradingProcess(const char *student_grades_directory, HANDLE proc
 
 void closeProcessHandles(HANDLE process_handles[], int process_count)
 {
+	/*when the program is closing all handles are taken care by closing iterratively
+	rceives: all processes handles and process count */
 	int i = 0;
 	for (i = 0; i < process_count; i++)
 	{
@@ -197,6 +204,8 @@ void closeProcessHandles(HANDLE process_handles[], int process_count)
 
 EXIT_CODE writeStudentGradeToFile(const char *output_file, const char *grades_directory, const char *student_id)
 {
+	/* when finishing calculation of a single students, this function wrties them into a file.
+	receives: a path to write from output file and the directory , the function recives student id 1 at once*/
 	EXIT_CODE exit_code = TM_SUCCESS;
 	char *student_grade_filename;
 	int student_grade_filename_length = 0;
@@ -224,6 +233,8 @@ EXIT_CODE writeStudentGradeToFile(const char *output_file, const char *grades_di
 
 EXIT_CODE getStudentGradeFromFile(const char *grade_filename, int *grade)
 {
+	/*receives student grade after all threads are done and final calc' has occured and saves in funal grade file 
+	being run per each student*/
 	FILE *file;
 	errno_t error_code;
 	EXIT_CODE exit_code = TM_SUCCESS;
@@ -245,9 +256,10 @@ EXIT_CODE getStudentGradeFromFile(const char *grade_filename, int *grade)
 
 EXIT_CODE appendGradeToFile(const char *filename, const char *student_id, int grade)
 {
+	/*finally writes the id and the grade of each student
+	receives: filename for writing, student id and student grade*/
 	FILE *file;
 	errno_t exit_code;
-
 	exit_code = fopen_s(&file, filename, "a");
 	if (exit_code != 0)
 	{
@@ -264,6 +276,7 @@ EXIT_CODE appendGradeToFile(const char *filename, const char *student_id, int gr
 
 BOOL createProcessSimple(LPTSTR command_line, PROCESS_INFORMATION *process_info_ptr)
 {
+	/*as always: creating a process with winAPI*/
 	STARTUPINFO	startinfo = { sizeof(STARTUPINFO), NULL, 0 };
 
 	return CreateProcess(NULL,
