@@ -7,8 +7,6 @@
 #include <windows.h>
 #include "dirent.h"
 
-
-#define CRT_NO_SECURE_WARNINGS 1
 #define FAIL_THRESHOLD 60
 #define NUM_OF_HW 10
 #define HW_FILENAME_LENGTH 9
@@ -51,6 +49,7 @@ int main(int argc, char* argv)
 	/*print their supid messages*/
 	/*save grades in files*/
 	char* curr_student_id = NULL;
+	int student_dir_length = 0;
 	
 	/*while ID in DIR*/
 	DIR* main_directory = opendir(grades_directory);
@@ -65,8 +64,9 @@ int main(int argc, char* argv)
 		if (strcmp(box->d_name, ".") == 0 || strcmp(box->d_name, "..") == 0)
 			continue;
 
-		curr_student_id = (char*)malloc(sizeof(char)*(strlen(box->d_name)+1));
-		strcpy_s(curr_student_id, 100,box->d_name);
+		student_dir_length = strlen(box->d_name) + 1;
+		curr_student_id = (char*)malloc(sizeof(char)*student_dir_length);
+		strcpy_s(curr_student_id, student_dir_length, box->d_name);
 
 		gradeSingleStudent(curr_student_id);
 		free(curr_student_id);
