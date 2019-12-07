@@ -18,6 +18,8 @@
 #define EXAM_FILENAME_LENGTH 9
 #define NUM_THREADS 12
 #define BRUTAL_TERMINATION_CODE 0x55
+#define ID_LENGTH 9
+#define FINAL_GRADE_FILENAME_LENGTH 20
 
 /*global variables*/
 static int midterm_grade = 0;
@@ -45,6 +47,8 @@ EXIT_CODE readGradeFromFile(const char *grades_directory, const char *grade_file
 
 EXIT_CODE createHWMutex(HANDLE mutex_handle);
 HANDLE createMutexSimple(LPCTSTR mutex_name);
+
+EXIT_CODE writeFinalGradeToFile(const char *grades_directory, int final_grade);
 
 typedef struct _hw_thread_params
 {
@@ -136,8 +140,31 @@ int calculateGrade(char* grades_directory)
 	CloseHandle(hw_mutex_handle);
 
 	// TODO: Print grade to file
+	exit_code = writeFinalGradeToFile(grades_directory, final_grade);
 
-	return 0;
+	return exit_code;
+}
+
+EXIT_CODE writeFinalGradeToFile(const char *grades_directory, int final_grade)
+{
+	char *student_id;
+	int id_start = '_';
+	int filename_length = 0;
+	char *final_grade_filename;
+	EXIT_CODE exit_code;
+
+	// Get the student's ID string
+	student_id = strchr(grades_directory, id_start) + 1;
+
+	filename_length = strlen(grades_directory) + 2 + FINAL_GRADE_FILENAME_LENGTH;
+	final_grade_filename = (char*)malloc(sizeof(char)*filename_length);
+	sprintf_s(final_grade_filename, filename_length, "%s//final_%s.txt", grades_directory, student_id);
+
+	exit_code = writeToFile(final_grade_filename, final_grade);
+	
+	free(final_grade_filename);
+
+	return exit_code;
 }
 
 EXIT_CODE createHWMutex(HANDLE mutex_handle)
