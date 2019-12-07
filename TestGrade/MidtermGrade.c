@@ -4,6 +4,17 @@
 
 #define MIDTERM_FILENAME_LENGTH 11
 
+/**
+*	Reads the midterm grade from the file.
+*
+*	Accepts
+*	-------
+*	grades_directory - a string representing the name of the directory containing the file.
+*
+*	Returns
+*	-------
+*	An integer containing the grade of the midterm exam.
+**/
 int getMidtermGrade(const char* grades_directory)
 {
 	int midterm_grade;

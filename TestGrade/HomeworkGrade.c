@@ -16,6 +16,20 @@ char* hw_file_names[NUM_OF_HW] =
 EXIT_CODE updateHWGrade(int hw_id, int hw_grade, int hw_grades[], HANDLE hw_mutex_handle);
 void sortArray(int* hw_grades[NUM_OF_HW]);
 
+/**
+*	Reads the homework grade from the file and updates the grades array.
+*
+*	Accepts
+*	-------
+*	grades_directory - a string representing the name of the directory containing the file.
+*   hw_id - an int representing the number of the homework.
+*	hw_grades - an array containing all homework grades to be updated.
+*	hw_mutex_handle - a handle to a mutex which locks the hw_grades array.
+*
+*	Returns
+*	-------
+*	An EXIT_CODE inidcating wether the operation was succefull.
+**/
 EXIT_CODE getHomeworkGrade(char* grades_directory, int hw_id, int hw_grades[], HANDLE hw_mutex_handle)
 {
 	int hw_grade = 0;
@@ -37,6 +51,21 @@ EXIT_CODE getHomeworkGrade(char* grades_directory, int hw_id, int hw_grades[], H
 	return TG_SUCCESS;
 }
 
+/**
+*	Updates the homework grade array in the specified index with the homework grade.
+*	The grades array is a shared resource so a mutex to lock it is used.
+*
+*	Accepts
+*	-------
+*   hw_id - an int representing the number of the homework to be updated.
+*	hw_grade - and integer represening the grade.
+*	hw_grades - an array containing all homework grades to be updated.
+*	hw_mutex_handle - a handle to a mutex which locks the hw_grades array.
+*
+*	Returns
+*	-------
+*	An EXIT_CODE inidcating wether the operation was succefull.
+**/
 EXIT_CODE updateHWGrade(int hw_id, int hw_grade, int hw_grades[], HANDLE hw_mutex_handle)
 {
 	DWORD wait_mutex_result;
@@ -61,6 +90,17 @@ EXIT_CODE updateHWGrade(int hw_id, int hw_grade, int hw_grades[], HANDLE hw_mute
 	return TG_SUCCESS;
 }
 
+/**
+*	Returns the average grade of the 8 best homework grades.
+*
+*	Accepts
+*	-------
+*	grades[] - an array containing the grades.
+*
+*	Returns
+*	-------
+*	A float containing the average grades of the homework.
+**/
 float calculateHomeworkGrade(int grades[])
 {
 	int i = 0;
@@ -77,6 +117,13 @@ float calculateHomeworkGrade(int grades[])
 	return hw_grade;
 }
 
+/**
+*	Sorts an array from high to low.
+*
+*	Accepts
+*	-------
+*	hw_grades - the array to be sorted.
+**/
 void sortArray(int* hw_grades[NUM_OF_HW])
 {
 	int i, j, a, number[NUM_OF_HW];

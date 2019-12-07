@@ -42,12 +42,21 @@ typedef struct _hw_thread_params
 	HANDLE hw_mutex_handle;
 } hw_thread_params;
 
+/**
+*	Calculated the total grade of the student and writes the final grade to a file.
+*	Each grade is read separately from a file by a thread. When all threads are done, the final
+*	grade is calculated and is written to a file.
+*
+*	Accepts
+*	-------
+*	grades_directory - a string representing the name of the directory containing the student's grades.
+*
+*	Returns
+*	-------
+*	An EXIT_CODE inidcating wether the operation was succefull.
+**/
 int calculateGrade(char* grades_directory)
 {
-	/*10 HW*/
-	/*MIDTERM*/
-	/*FINAL A*/
-	/*FINAL B*/
 	char hw_mutex_name[] = "hw_mutex";
 	HANDLE hw_mutex_handle;
 	HANDLE p_thread_handles[NUM_THREADS];
@@ -126,6 +135,18 @@ int calculateGrade(char* grades_directory)
 	return exit_code;
 }
 
+/**
+*	Writes the final grade of the student to a file.
+*
+*	Accepts
+*	-------
+*	grades_directory - a string representing the name of the directory containing the file.
+*   final_grade - an integer containing the final grade of the student.
+*
+*	Returns
+*	-------
+*	An EXIT_CODE inidcating wether the operation was succefull.
+**/
 EXIT_CODE writeFinalGradeToFile(const char *grades_directory, int final_grade)
 {
 	char *student_id;
@@ -148,6 +169,17 @@ EXIT_CODE writeFinalGradeToFile(const char *grades_directory, int final_grade)
 	return exit_code;
 }
 
+/**
+*	Created a mutex to the homework array.
+*
+*	Accepts
+*	-------
+*	mutex_handle - a pointer to be assigned with the created handle.
+*
+*	Returns
+*	-------
+*	An exit code indicating if the action was successfull.
+**/
 EXIT_CODE createHWMutex(HANDLE mutex_handle)
 {
 	char hw_mutex_name[] = "hw_mutex";
@@ -163,6 +195,17 @@ EXIT_CODE createHWMutex(HANDLE mutex_handle)
 	return 0;
 }
 
+/**
+*	Returns a handle to a mutex.
+*
+*	Accepts
+*	-------
+*	mutex_name - a string containing a unique identifier to the mutex.
+*
+*	Returns
+*	-------
+*	A handle to a mutex if created successfully, otherwise returns NULL.
+**/
 HANDLE createMutexSimple(LPCTSTR mutex_name)
 {
 	return CreateMutex(
@@ -172,6 +215,17 @@ HANDLE createMutexSimple(LPCTSTR mutex_name)
 	);
 }
 
+/**
+*	Runs the reading of a homework grade in a thread.
+*
+*	Accepts
+*	-------
+*	lpParam - the parameters to the thread.
+*
+*	Returns
+*	-------
+*	An exit code.
+**/
 DWORD WINAPI hwGradeThread(LPVOID lpParam)
 {
 	hw_thread_params *thread_params;
@@ -187,6 +241,17 @@ DWORD WINAPI hwGradeThread(LPVOID lpParam)
 	return exit_code;
 }
 
+/**
+*	Runs the reading of the midterm grade in a thread.
+*
+*	Accepts
+*	-------
+*	lpParam - the parameters to the thread.
+*
+*	Returns
+*	-------
+*	An exit code.
+**/
 DWORD WINAPI midtermGradeThread(LPVOID lpParam)
 {
 	char* grades_directory;
@@ -196,6 +261,17 @@ DWORD WINAPI midtermGradeThread(LPVOID lpParam)
 	midterm_grade = getMidtermGrade(grades_directory);//GLOBAL
 }
 
+/**
+*	Runs the reading of the exam grade in a thread.
+*
+*	Accepts
+*	-------
+*	lpParam - the parameters to the thread.
+*
+*	Returns
+*	-------
+*	An exit code.
+**/
 DWORD WINAPI getExamGradeThread(LPVOID lpParam)
 {
 	char* grades_directory;
@@ -204,6 +280,17 @@ DWORD WINAPI getExamGradeThread(LPVOID lpParam)
 	exam_grade = getExamGrade(grades_directory);//GLOBAL
 }
 
+/**
+*	Reads the exam grade from the file. The last grade is the one to be returned.
+*
+*	Accepts
+*	-------
+*	grades_directory - a string representing the name of the directory containing the file.
+*
+*	Returns
+*	-------
+*	An integer containing the grade of the final exam.
+**/
 int getExamGrade(char* grades_directory)
 {
 	int moedA_grade;
@@ -233,6 +320,19 @@ int getExamGrade(char* grades_directory)
 	return (exam_grade);
 }
 
+/**
+*	Calculates the final grade. The final grade is rounded up.
+*
+*	Accepts
+*	-------
+*	hw_grade - a float containing the final hw grade.
+*	midterm_grade - an integer containing the midterm grade.
+*	exam_grade - an integer containing the exam grade.
+*
+*	Returns
+*	-------
+*	An integer containing the final grade of the student.
+**/
 int calculateFinalGrade(float hw_grade, int midterm_grade, int exam_grade)
 {
 	float final_grade = 0;

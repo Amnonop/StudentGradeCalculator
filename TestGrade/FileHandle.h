@@ -6,11 +6,33 @@
 /* Reads a grade from the file specified in filename*/
 int getGradeFromFile(char* filename);
 
+/**
+*	Reads a grade from a file in the grades directory.
+*
+*	Accepts
+*	-------
+*	grades_directory - a string representing the name of the directory containing the file.
+*   grade_filename - a string representing the name of the file containing the grade.
+*	grade - a pointer to an integer which will contain the grade value that was read.
+*
+*	Returns
+*	-------
+*	An EXIT_CODE inidcating wether the read operation was succefull.
+**/
 EXIT_CODE readGradeFromFile(const char *grades_directory, const char *grade_filename, int *grade);
 
-/*	Reads an integer from the file specified in filename. 
-	Returns an integer representing an error code if an error occured,
-	otherwise returns 0 and assigns the read integer to value. */
+/**
+*	reads a single value from the file specified in filename.
+*
+*	Accepts
+*	-------
+*	filename - a string representing the name of the file.
+*	value - a pointer to an integer which will contain the value that was read.
+*
+*	Returns
+*	-------
+*	An EXIT_CODE inidcating wether the read operation was succefull.
+**/
 EXIT_CODE readFromFile(char *filename, int *value);
 
 /**
