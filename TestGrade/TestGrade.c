@@ -19,7 +19,7 @@
 #define NUM_THREADS 12
 #define BRUTAL_TERMINATION_CODE 0x55
 #define ID_LENGTH 9
-#define FINAL_GRADE_FILENAME_LENGTH 20
+#define FINAL_GRADE_FILENAME_LENGTH 19
 
 /*declerations*/
 int getExamGrade(char* grades_directory);
@@ -140,11 +140,11 @@ EXIT_CODE writeFinalGradeToFile(const char *grades_directory, int final_grade)
 	EXIT_CODE exit_code;
 
 	// Get the student's ID string
-	student_id = strchr(grades_directory, id_start) + 1;
+	student_id = grades_directory + (strlen(grades_directory) - ID_LENGTH); //strchr(grades_directory, id_start) + 1;
 
 	filename_length = strlen(grades_directory) + 2 + FINAL_GRADE_FILENAME_LENGTH;
 	final_grade_filename = (char*)malloc(sizeof(char)*filename_length);
-	sprintf_s(final_grade_filename, filename_length, "%s//final_%s.txt", grades_directory, student_id);
+	sprintf_s(final_grade_filename, filename_length, "%s\\final_%s.txt", grades_directory, student_id);
 
 	exit_code = writeToFile(final_grade_filename, final_grade);
 	
@@ -217,7 +217,7 @@ int getExamGrade(char* grades_directory)
 	char* moedB_file_name = "moedB.txt";
 	char* curr_file_path;
 	int directory_path_length = strlen(grades_directory);
-	int filename_length = directory_path_length + 1 + EXAM_FILENAME_LENGTH + 1;
+	int filename_length = directory_path_length + 2 + EXAM_FILENAME_LENGTH + 1;
 
 	curr_file_path = (char*)malloc(sizeof(char)*filename_length);
 	sprintf_s(curr_file_path, filename_length, "%s\\%s", grades_directory, moedA_file_name);
