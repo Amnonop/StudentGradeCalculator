@@ -41,7 +41,7 @@ int gradeSingleStudent(char* student_id);
 
 int main(int argc, char* argv)
 {
-	char* grades_directory = "C:\Users\ophir\source\repos\StudentGradeCalculator\students_grades";//argv...
+	char* grades_directory = "C://Users//ophir//source//repos//StudentGradeCalculator//students_grades";//argv...
 	char* final_grade_filename = "final_grades.txt";
 	//MALLOC - no need for an array because it is in the stack?
 	int students_grades[NUM_OF_STUDENTS] = { 0 };
@@ -51,6 +51,7 @@ int main(int argc, char* argv)
 	/*print their supid messages*/
 	/*save grades in files*/
 	char* curr_student_id = NULL;
+	
 	/*while ID in DIR*/
 	DIR* main_directory = opendir(grades_directory);
 	if (main_directory == NULL)
@@ -58,12 +59,14 @@ int main(int argc, char* argv)
 		printf(stderr);
 		//exit(1);
 	}
-	struct dirent* box = readdir(main_directory);
+	dirent* box = readdir(main_directory);
 	while (box != NULL)
 	{
+		curr_student_id = (char*)malloc(sizeof(char)*(strlen(box->d_name)+1));
 		strcpy_s(curr_student_id, 100,box->d_name);
 		box = readdir(main_directory);
 		gradeSingleStudent(curr_student_id);
+		free(curr_student_id);
 	}
 
 	/*TODO: receiving ID and GRADE as int*/
