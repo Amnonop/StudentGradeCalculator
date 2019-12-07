@@ -87,13 +87,13 @@ int main(int argc, char* argv)
 
 int gradeSingleStudent(char* student_id)
 {
-	char* log_filename = "Computation.txt";
-	char* solved_step;
-	char* solution_step = (char*)malloc(sizeof(char) * (strlen(student_id) + 1));
-	strcpy_s(solution_step, strlen(solution_step), student_id);
-	char* temp = "grade_";
-	strcat(temp, student_id);
-	strcpy(student_id, temp);
+	//char* log_filename = "Computation.txt";
+	//char* solved_step;
+	//char* solution_step = (char*)malloc(sizeof(char) * (strlen(student_id) + 1));
+	//strcpy_s(solution_step, strlen(solution_step), student_id);
+	//char* temp = "grade_";
+	//strcat(temp, student_id);
+	//strcpy(student_id, temp);
 	CreateProcessSimpleMain(student_id);
 
 	return EXIT_SUCCESS;
