@@ -8,7 +8,7 @@
 #include "dirent.h"
 
 
-
+#define CRT_NO_SECURE_WARNINGS 1
 #define FAIL_THRESHOLD 60
 #define NUM_OF_HW 10
 #define HW_FILENAME_LENGTH 9
@@ -32,8 +32,6 @@ static int midterm_grade = 0;
 static int exam_grade = 0;
 
 
-
-
 /*declerations*/
 int openGradeFile();
 int printGradeFile(int id, int grade);
@@ -43,7 +41,7 @@ int gradeSingleStudent(char* student_id);
 
 int main(int argc, char* argv)
 {
-	char* grades_directory = "students_grades";//argv...
+	char* grades_directory = "C:\Users\ophir\source\repos\StudentGradeCalculator\students_grades";//argv...
 	char* final_grade_filename = "final_grades.txt";
 	//MALLOC - no need for an array because it is in the stack?
 	int students_grades[NUM_OF_STUDENTS] = { 0 };
@@ -63,7 +61,7 @@ int main(int argc, char* argv)
 	struct dirent* box = readdir(main_directory);
 	while (box != NULL)
 	{
-		strcpy(curr_student_id, box->d_name);
+		strcpy_s(curr_student_id, 100,box->d_name);
 		box = readdir(main_directory);
 		gradeSingleStudent(curr_student_id);
 	}
