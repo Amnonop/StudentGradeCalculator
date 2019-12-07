@@ -21,11 +21,6 @@
 #define ID_LENGTH 9
 #define FINAL_GRADE_FILENAME_LENGTH 20
 
-/*global variables*/
-static int midterm_grade = 0;
-static int exam_grade = 0;
-static int hw_grades[NUM_OF_HW] = { 0 };
-
 char* hw_file_names[NUM_OF_HW] =
 { "ex01.txt","ex02.txt","ex03.txt",
 "ex04.txt", "ex05.txt", "ex06.txt",

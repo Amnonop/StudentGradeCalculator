@@ -28,4 +28,9 @@ typedef enum {
 #define ERROR_MUTEX_WAIT_FAILED -8
 #define ERROR_MUTEX_RELEASE_FAILED -9;
 
+/*global variables*/
+static int midterm_grade = 0;
+static int exam_grade = 0;
+static int hw_grades[NUM_OF_HW] = { 0 };
+
 #endif
