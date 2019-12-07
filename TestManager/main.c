@@ -20,6 +20,7 @@ typedef int EXIT_CODE;
 #define ID_LENGTH 9
 #define NUM_OF_STUDENTS 10
 #define STUDENT_DIR_LENGTH 17
+#define STUDENT_GRADE_FILENAME_LENGTH 20
 
 #define FAIL_THRESHOLD 60
 #define NUM_OF_HW 10
@@ -55,6 +56,9 @@ EXIT_CODE runGradesCalculation(const char* grades_directory);
 EXIT_CODE getStudentIdsFromFile(const char *grades_directory, const char *student_ids_filename, char *student_ids[], int *student_count);
 EXIT_CODE createGradingProcess(const char *student_grades_directory, HANDLE process_handle[], int process_index);
 void closeProcessHandles(HANDLE process_handles[], int process_count);
+EXIT_CODE writeStudentGradeToFile(const char *output_file, const char *grades_directory, const char *student_id);
+EXIT_CODE getStudentGradeFromFile(const char *grade_filename, int *grade);
+EXIT_CODE appendGradeToFile(const char *filename, const char *student_id, int grade);
 
 int main(int argc, char* argv)
 {
@@ -79,6 +83,7 @@ int main(int argc, char* argv)
 
 EXIT_CODE runGradesCalculation(const char* grades_directory)
 {
+	char *grades_output_filename = "final_grades.txt";
 	char *student_ids_filename = "student_ids.txt";
 	char *student_ids[NUM_OF_STUDENTS];
 	int student_count = 0;
@@ -122,13 +127,18 @@ EXIT_CODE runGradesCalculation(const char* grades_directory)
 	for (i = 0; i < process_count; i++)
 	{
 		GetExitCodeProcess(process_handles[i], &process_exit_code);
+		CloseHandle(process_handles[i]);
 		if (process_exit_code != 0)
 		{
-			printf("Captain, we were unable to calculate %s", student_ids[i]);
-			exit_code = TM_ERROR_CALCULATING_GRADE;
+			printf("Captain, we were unable to calculate %s\n", student_ids[i]);
+			continue;
 		}
-		CloseHandle(process_handles[i]);
+
+		exit_code = writeStudentGradeToFile(grades_output_filename, grades_directory, student_ids[i]);
 	}
+
+	for (i = 0; i < student_count; i++)
+		free(student_ids[i]);
 
 	return exit_code;
 }
@@ -150,7 +160,7 @@ EXIT_CODE getStudentIdsFromFile(const char *grades_directory, const char *studen
 
 	if (exit_code != 0)
 	{
-		printf("An error occured while openning file %s for reading.", student_ids_filename);
+		printf("An error occured while openning file %s for reading.\n", student_ids_filename);
 		return TM_FILE_OPEN_FAILED;
 	}
 
@@ -204,6 +214,73 @@ void closeProcessHandles(HANDLE process_handles[], int process_count)
 	{
 		CloseHandle(process_handles[i]);
 	}
+}
+
+EXIT_CODE writeStudentGradeToFile(const char *output_file, const char *grades_directory, const char *student_id)
+{
+	EXIT_CODE exit_code = TM_SUCCESS;
+	char *student_grade_filename;
+	int student_grade_filename_length = 0;
+	int student_grade = 0;
+	char *output_filename;
+	int output_filename_length = 0;
+
+	student_grade_filename_length = strlen(grades_directory) + 2 + STUDENT_DIR_LENGTH + 2 + STUDENT_GRADE_FILENAME_LENGTH;
+	student_grade_filename = (char*)malloc(sizeof(char)*student_grade_filename_length);
+	sprintf_s(student_grade_filename, student_grade_filename_length, 
+		"%s\\grades_%s\\final_%s.txt", grades_directory, student_id, student_id);
+	exit_code = getStudentGradeFromFile(student_grade_filename, &student_grade);
+	free(student_grade_filename);
+	if (exit_code != TM_SUCCESS)
+		return exit_code;
+
+	output_filename_length = strlen(grades_directory) + 2 + strlen(output_file) + 1;
+	output_filename = (char*)malloc(sizeof(char)*output_filename_length);
+	sprintf_s(output_filename, output_filename_length, "%s\\%s", grades_directory, output_file);
+	exit_code = appendGradeToFile(output_filename, student_id, student_grade);
+	free(output_filename);
+
+	return exit_code;
+}
+
+EXIT_CODE getStudentGradeFromFile(const char *grade_filename, int *grade)
+{
+	FILE *file;
+	errno_t error_code;
+	EXIT_CODE exit_code = TM_SUCCESS;
+
+	error_code = fopen_s(&file, grade_filename, "r");
+
+	if (error_code != 0)
+	{
+		printf("An error occured while openning file %s for reading.", grade_filename);
+		return TM_FILE_OPEN_FAILED;
+	}
+
+	fscanf_s(file, "%d", grade);
+
+	fclose(file);
+
+	return exit_code;
+}
+
+EXIT_CODE appendGradeToFile(const char *filename, const char *student_id, int grade)
+{
+	FILE *file;
+	errno_t exit_code;
+
+	exit_code = fopen_s(&file, filename, "a");
+	if (exit_code != 0)
+	{
+		printf("An error occured while openning file %s for writing.", filename);
+		return TM_FILE_OPEN_FAILED;
+	}
+
+	fprintf_s(file, "%s %d\n", student_id, grade);
+
+	fclose(file);
+
+	return TM_SUCCESS;
 }
 
 int gradeSingleStudent(char* student_id)
@@ -348,66 +425,3 @@ void listFilesRecursively(char *basePath)
 
 	closedir(dir);
 }*/
-
-int* studentsIdsCollection()
-{
-	FILE* fp;
-	char buffer[20];
-	int student_ids[10] = { 0 }; 
-	int i = 0;
-	fp = fopen("C:\\Users\\ophir\\source\\repos\\StudentGradeCalculator\\students_grades\\student_ids.txt", "r");
-	while (fgets(buffer, 20, (FILE*)fp)) 
-	{
-		sscanf_s(buffer, "%d", student_ids[i]);
-		i++;
-	}
-
-	fclose(fp);
-	return student_ids;
-}
-
-void studentsGradesCollection()
-{
-	char* directory = "C:\\Users\\ophir\\source\\repos\\StudentGradeCalculator\\students_grades\\grade_";
-	int* student_ids;
-	int students_grades[NUM_OF_STUDENTS] = { 0 };
-	char* temp_dir = (char*)malloc(sizeof(char) * 256);
-	if (temp_dir == NULL)
-		stderr;
-	strcpy_s(temp_dir, 245, directory);
-	student_ids = studentsIdsCollection();
-	for (int i = 0; i < NUM_OF_STUDENTS; i++)
-	{
-		if (student_ids[i] != 0)
-		{
-			char* curr_id = (char*)malloc(sizeof(char)*10);
-			if (curr_id != NULL)
-			{
-				sprintf_s(curr_id,  "%d", student_ids[i]);
-				strcat(temp_dir, curr_id);
-				students_grades[i] = getGrade(temp_dir);
-				printGradeFile(student_ids[i], students_grades[i]);
-			}
-			else if (curr_id != NULL)
-			{
-				stderr;
-			}
-			
-
-		}
-	}
-}
-
-
-int getGrade(char* temp_dir)
-{
-	FILE* fp;
-	char buffer[4];
-	int student_final_grade = 0;
-	int i = 0;
-	strcat_s(temp_dir, 10, "\\final_grade.txt");
-	fp = fopen(temp_dir, "r");
-	sscanf_s(buffer, "%d", student_final_grade);
-	fclose(fp);
-	return student_final_grade;
-}
