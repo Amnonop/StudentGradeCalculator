@@ -33,13 +33,13 @@ static int exam_grade = 0;
 /*declerations*/
 int openGradeFile();
 int printGradeFile(int id, int grade);
-int CreateProcessSimpleMain(char* student_id);
+void CreateProcessSimpleMain(char* student_id);
 BOOL CreateProcessSimple(LPTSTR command_line, PROCESS_INFORMATION *process_info_ptr);
 int gradeSingleStudent(char* student_id);
 
 int main(int argc, char* argv)
 {
-	char* grades_directory = "C:\\katya\\StudentGradeCalculator\\students_grades";//argv...
+	char* grades_directory = "C:\\Users\\ophir\\source\\repos\\StudentGradeCalculator\\students_grades";//argv...
 	char* final_grade_filename = "final_grades.txt";
 	//MALLOC - no need for an array because it is in the stack?
 	int students_grades[NUM_OF_STUDENTS] = { 0 };
@@ -70,6 +70,12 @@ int main(int argc, char* argv)
 
 		gradeSingleStudent(curr_student_id);
 		free(curr_student_id);
+	}
+	wait_code = WaitForMultipleObjects(NUM_THREADS, p_thread_handles, true, INFINITE);
+	if ((wait_code == WAIT_TIMEOUT) || (wait_code == WAIT_FAILED))
+	{
+		printf("Error waiting for threads to finish.\n");
+		return TG_THREADS_WAIT_FAILED; // Should not return w/o cleanup
 	}
 
 	/*TODO: receiving ID and GRADE as int*/
@@ -103,21 +109,20 @@ int gradeSingleStudent(char* student_id)
 	return EXIT_SUCCESS;
 }
 
-int CreateProcessSimpleMain(char* student_id)
+void CreateProcessSimpleMain(char* student_id)
 {
 	PROCESS_INFORMATION procinfo;
 	DWORD waitcode;
 	DWORD exitcode;
 	BOOL retVal;
 	CHAR process_name[] = "TestGrade.exe ";
-
 	int command_length = strlen(student_id) + strlen(process_name) + 2;
 	char* command = (char*)malloc(sizeof(char)*command_length);
 	sprintf_s(command, command_length, "TestGrade.exe %s", student_id);
 
 	retVal = CreateProcessSimple(command, &procinfo);
 
-	if (retVal == 0)
+	/*if (retVal == 0)
 	{
 		printf("Process Creation Failed!\n");
 		return EXIT_PROCESS_HANDLE_ERROR;
@@ -143,7 +148,7 @@ int CreateProcessSimpleMain(char* student_id)
 	CloseHandle(procinfo.hProcess);
 	CloseHandle(procinfo.hThread);
 
-	return exitcode;
+	return exitcode;*/
 }
 
 
@@ -189,7 +194,7 @@ int printGradeFile(int id, int grade)
 	FILE *fp;
 	errno_t error;
 
-	error = fopen_s(&fp, "final_grades.txt", "a");
+	error = fopen_s(&fp, "C:\\Users\\ophir\\source\\repos\\StudentGradeCalculator\\students_grades\\final_grades.txt", "a");
 	if (error != 0)
 	{
 		printf("An error occured while openning file %s for writing final_grades.txt");
@@ -232,3 +237,66 @@ void listFilesRecursively(char *basePath)
 
 	closedir(dir);
 }*/
+
+int* studentsIdsCollection()
+{
+	FILE* fp;
+	char buffer[20];
+	int student_ids[10] = { 0 }; 
+	int i = 0;
+	fp = fopen("C:\\Users\\ophir\\source\\repos\\StudentGradeCalculator\\students_grades\\student_ids.txt", "r");
+	while (fgets(buffer, 20, (FILE*)fp)) 
+	{
+		sscanf_s(buffer, "%d", student_ids[i]);
+		i++;
+	}
+
+	fclose(fp);
+	return student_ids;
+}
+
+void studentsGradesCollection()
+{
+	char* directory = "C:\\Users\\ophir\\source\\repos\\StudentGradeCalculator\\students_grades\\grade_";
+	int* student_ids;
+	int students_grades[NUM_OF_STUDENTS] = { 0 };
+	char* temp_dir = (char*)malloc(sizeof(char) * 256);
+	if (temp_dir == NULL)
+		stderr;
+	strcpy_s(temp_dir, 245, directory);
+	student_ids = studentsIdsCollection();
+	for (int i = 0; i < NUM_OF_STUDENTS; i++)
+	{
+		if (student_ids[i] != 0)
+		{
+			char* curr_id = (char*)malloc(sizeof(char)*10);
+			if (curr_id != NULL)
+			{
+				sprintf_s(curr_id,  "%d", student_ids[i]);
+				strcat(temp_dir, curr_id);
+				students_grades[i] = getGrade(temp_dir);
+				printGradeFile(student_ids[i], students_grades[i]);
+			}
+			else if (curr_id != NULL)
+			{
+				stderr;
+			}
+			
+
+		}
+	}
+}
+
+
+int getGrade(char* temp_dir)
+{
+	FILE* fp;
+	char buffer[4];
+	int student_final_grade = 0;
+	int i = 0;
+	strcat_s(temp_dir, 10, "\\final_grade.txt");
+	fp = fopen(temp_dir, "r");
+	sscanf_s(buffer, "%d", student_final_grade);
+	fclose(fp);
+	return student_final_grade;
+}
