@@ -21,6 +21,23 @@ int getGradeFromFile(char* filename)
 	return sub_grade;
 }
 
+EXIT_CODE readGradeFromFile(const char *grades_directory, const char *grade_filename, int *grade)
+{
+	char *grade_file_path;
+	int filename_length;
+	EXIT_CODE EXIT_CODE;
+
+	filename_length = strlen(grades_directory) + 2 + strlen(grade_filename) + 1;
+	grade_file_path = (char*)malloc(sizeof(char)*filename_length);
+	sprintf_s(grade_file_path, filename_length, "%s//%s", grades_directory, grade_filename);
+
+	EXIT_CODE = readFromFile(grade_file_path, grade);
+
+	free(grade_file_path);
+
+	return EXIT_CODE;
+}
+
 EXIT_CODE readFromFile(char *filename, int *value)
 {
 	FILE *file;

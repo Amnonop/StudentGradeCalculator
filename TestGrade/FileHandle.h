@@ -6,6 +6,8 @@
 /* Reads a grade from the file specified in filename*/
 int getGradeFromFile(char* filename);
 
+EXIT_CODE readGradeFromFile(const char *grades_directory, const char *grade_filename, int *grade);
+
 /*	Reads an integer from the file specified in filename. 
 	Returns an integer representing an error code if an error occured,
 	otherwise returns 0 and assigns the read integer to value. */

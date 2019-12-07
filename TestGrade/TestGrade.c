@@ -12,33 +12,22 @@
 #include "FileHandle.h"
 #include "MidtermGrade.h"
 #include "ThreadHandle.h"
+#include "HomeworkGrade.h"
 
 #define HW_FILENAME_LENGTH 9
-#define NUM_OF_CALC_HW 8
 #define EXAM_FILENAME_LENGTH 9
 #define NUM_THREADS 12
 #define BRUTAL_TERMINATION_CODE 0x55
 #define ID_LENGTH 9
 #define FINAL_GRADE_FILENAME_LENGTH 20
 
-char* hw_file_names[NUM_OF_HW] =
-{ "ex01.txt","ex02.txt","ex03.txt",
-"ex04.txt", "ex05.txt", "ex06.txt",
-"ex07.txt", "ex08.txt", "ex09.txt", "ex10.txt" };
-
 /*declerations*/
-float calculateHomeworkGrade(int homework_grades[]);
-void sortArray(int* hw_grades[NUM_OF_HW]);
 int getExamGrade(char* grades_directory);
 int calculateFinalGrade(float hw_grade, int midterm_grade, int exam_grade);
 DWORD WINAPI midtermGradeThread(LPVOID lpParam);
 DWORD WINAPI getExamGradeThread(LPVOID lpParam);
 
 DWORD WINAPI hwGradeThread(LPVOID lpParam);
-EXIT_CODE getHomeworkGrade(char* grades_directory, int hw_id, HANDLE hw_mutex_handle);
-EXIT_CODE updateHWGrade(int hw_id, int hw_grade, HANDLE hw_mutex_handle);
-
-EXIT_CODE readGradeFromFile(const char *grades_directory, const char *grade_filename, int *grade);
 
 EXIT_CODE createHWMutex(HANDLE mutex_handle);
 HANDLE createMutexSimple(LPCTSTR mutex_name);
@@ -49,6 +38,7 @@ typedef struct _hw_thread_params
 {
 	char *grades_directory;
 	int hw_id;
+	int *hw_grades;
 	HANDLE hw_mutex_handle;
 } hw_thread_params;
 
@@ -62,6 +52,7 @@ int calculateGrade(char* grades_directory)
 	HANDLE hw_mutex_handle;
 	HANDLE p_thread_handles[NUM_THREADS];
 	DWORD p_thread_ids[NUM_THREADS];
+	int hw_grades[NUM_OF_HW] = { 0 };
 	hw_thread_params thread_params[NUM_OF_HW];
 	DWORD wait_code;
 	BOOL ret_val;
@@ -90,8 +81,8 @@ int calculateGrade(char* grades_directory)
 		// Create thread parameters
 		thread_params[hw_id].grades_directory = grades_directory;
 		thread_params[hw_id].hw_id = hw_id;
+		thread_params[hw_id].hw_grades = hw_grades;
 		thread_params[hw_id].hw_mutex_handle = hw_mutex_handle;
-		
 		
 		p_thread_handles[i] = createThreadSimple(hwGradeThread, &(thread_params[hw_id]), &p_thread_ids[i]);
 		hw_id++;
@@ -186,21 +177,6 @@ HANDLE createMutexSimple(LPCTSTR mutex_name)
 	);
 }
 
-float calculateHomeworkGrade(int homework_grades[])
-{
-	int i = 0;
-	float hw_grade = 0;
-
-	sortArray(homework_grades);
-
-	for (i = 0; i < NUM_OF_CALC_HW; i++)
-	{
-		hw_grade += homework_grades[i];
-	}
-
-	return (hw_grade / NUM_OF_CALC_HW);
-}
-
 DWORD WINAPI hwGradeThread(LPVOID lpParam)
 {
 	hw_thread_params *thread_params;
@@ -212,70 +188,8 @@ DWORD WINAPI hwGradeThread(LPVOID lpParam)
 
 	thread_params = (hw_thread_params*)lpParam;
 
-	exit_code = getHomeworkGrade(thread_params->grades_directory, thread_params->hw_id, thread_params->hw_mutex_handle);
+	exit_code = getHomeworkGrade(thread_params->grades_directory, thread_params->hw_id, thread_params->hw_grades, thread_params->hw_mutex_handle);
 	return exit_code;
-}
-
-EXIT_CODE getHomeworkGrade(char* grades_directory, int hw_id, HANDLE hw_mutex_handle)
-{
-	int hw_grade = 0;
-	EXIT_CODE exit_code;
-
-	exit_code = readGradeFromFile(grades_directory, hw_file_names[hw_id], &hw_grade);
-
-	if (exit_code != 0)
-		return exit_code;
-
-	if (hw_grade < FAIL_THRESHOLD)
-		hw_grade = 0;
-
-	// This section should be locked
-	exit_code = updateHWGrade(hw_id, hw_grade, hw_mutex_handle);
-	if (exit_code != 0)
-		return exit_code;
-
-	return TG_SUCCESS;
-}
-
-EXIT_CODE updateHWGrade(int hw_id, int hw_grade, HANDLE hw_mutex_handle)
-{
-	DWORD wait_mutex_result;
-	BOOL release_mutex_result;
-
-	wait_mutex_result = WaitForSingleObject(hw_mutex_handle, INFINITE);
-	if (wait_mutex_result != WAIT_OBJECT_0)
-	{
-		if (wait_mutex_result == WAIT_ABANDONED)
-			return TG_MUTEX_ABANDONED;
-		else
-			return TG_MUTEX_WAIT_FAILED;
-	}
-
-	// Crtical section start
-	hw_grades[hw_id] = hw_grade;
-
-	release_mutex_result = ReleaseMutex(hw_mutex_handle);
-	if (release_mutex_result == FALSE)
-		return TG_MUTEX_RELEASE_FAILED;
-
-	return TG_SUCCESS;
-}
-
-EXIT_CODE readGradeFromFile(const char *grades_directory, const char *grade_filename, int *grade)
-{
-	char *grade_file_path;
-	int filename_length;
-	EXIT_CODE EXIT_CODE;
-
-	filename_length = strlen(grades_directory) + 2 + strlen(grade_filename) + 1;
-	grade_file_path = (char*)malloc(sizeof(char)*filename_length);
-	sprintf_s(grade_file_path, filename_length, "%s//%s", grades_directory, grade_filename);
-
-	EXIT_CODE = readFromFile(grade_file_path, grade);
-
-	free(grade_file_path);
-	
-	return EXIT_CODE;
 }
 
 DWORD WINAPI midtermGradeThread(LPVOID lpParam)
@@ -323,52 +237,9 @@ int getExamGrade(char* grades_directory)
 	return (exam_grade);
 }
 
-int getGradeFromFile2(char* filename)
-{
-	/*Ecactly the same as above but for the HWThread*/
-	int sub_grade = 0;
-	FILE *fp;
-	errno_t error;
-	error = fopen_s(&fp, filename, "r");
-
-	if (error != 0)
-		printf("An error occured while openning file %s for writing.", filename);
-
-	else if (fp)
-	{
-		fscanf_s(fp, "%d", &sub_grade);
-		fclose(fp);
-	}
-
-	return sub_grade;
-}
-
 int calculateFinalGrade(float hw_grade, int midterm_grade, int exam_grade)
 {
 	float final_grade = 0;
 	final_grade = 0.2*hw_grade + 0.2*midterm_grade + 0.6*exam_grade;
 	return ceil(final_grade);
-}
-
-void sortArray(int* hw_grades[NUM_OF_HW])
-{
-	{
-
-		int i, j, a, number[NUM_OF_HW];
-
-		for (i = 0; i < NUM_OF_HW; ++i)
-		{
-
-			for (j = i + 1; j < NUM_OF_HW; ++j)
-			{
-
-				if (hw_grades[i] < hw_grades[j])
-				{
-					a = hw_grades[i];
-					hw_grades[i] = hw_grades[j];
-					hw_grades[j] = a;
-				}
-			}
-		}
-	}
 }

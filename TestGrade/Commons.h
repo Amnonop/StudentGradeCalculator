@@ -31,6 +31,6 @@ typedef enum {
 /*global variables*/
 static int midterm_grade = 0;
 static int exam_grade = 0;
-static int hw_grades[NUM_OF_HW] = { 0 };
+//static int hw_grades[NUM_OF_HW] = { 0 };
 
 #endif
