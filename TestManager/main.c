@@ -5,7 +5,7 @@
 #include <errno.h>
 #include <math.h>
 #include <windows.h>
-//#include "dirent.h"
+#include "dirent.h"
 
 
 
@@ -41,9 +41,9 @@ int CreateProcessSimpleMain(char* student_id);
 BOOL CreateProcessSimple(LPTSTR command_line, PROCESS_INFORMATION *process_info_ptr);
 int gradeSingleStudent(char* student_id);
 
-int main()
+int main(int argc, char* argv)
 {
-	char* grades_directory = "grades_123456789";//argv...
+	char* grades_directory = "students_grades";//argv...
 	char* final_grade_filename = "final_grades.txt";
 	//MALLOC - no need for an array because it is in the stack?
 	int students_grades[NUM_OF_STUDENTS] = { 0 };
@@ -54,8 +54,21 @@ int main()
 	/*save grades in files*/
 	char* curr_student_id = NULL;
 	/*while ID in DIR*/
-	gradeSingleStudent(curr_student_id);
+	DIR* main_directory = opendir(grades_directory);
+	if (main_directory == NULL)
+	{
+		printf(stderr);
+		//exit(1);
+	}
+	struct dirent* box = readdir(main_directory);
+	while (box != NULL)
+	{
+		strcpy(curr_student_id, box->d_name);
+		box = readdir(main_directory);
+		gradeSingleStudent(curr_student_id);
+	}
 
+	/*TODO: receiving ID and GRADE as int*/
 	file_handle_return_code = openGradeFile(final_grade_filename);
 	if (file_handle_return_code != EXIT_SUCCESS)
 		return file_handle_return_code;
@@ -78,7 +91,9 @@ int gradeSingleStudent(char* student_id)
 	char* solved_step;
 	char* solution_step = (char*)malloc(sizeof(char) * (strlen(student_id) + 1));
 	strcpy_s(solution_step, strlen(solution_step), student_id);
-
+	char* temp = "grade_";
+	strcat(temp, student_id);
+	strcpy(student_id, temp);
 	CreateProcessSimpleMain(student_id);
 
 	return EXIT_SUCCESS;
