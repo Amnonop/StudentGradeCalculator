@@ -41,7 +41,7 @@ int gradeSingleStudent(char* student_id);
 
 int main(int argc, char* argv)
 {
-	char* grades_directory = "C://Users//ophir//source//repos//StudentGradeCalculator//students_grades";//argv...
+	char* grades_directory = "C:\\katya\\StudentGradeCalculator\\students_grades";//argv...
 	char* final_grade_filename = "final_grades.txt";
 	//MALLOC - no need for an array because it is in the stack?
 	int students_grades[NUM_OF_STUDENTS] = { 0 };
@@ -59,9 +59,12 @@ int main(int argc, char* argv)
 		printf(stderr);
 		//exit(1);
 	}
-	dirent* box = readdir(main_directory);
-	while (box != NULL)
+	dirent* box;
+	while ((box = readdir(main_directory)) != NULL)
 	{
+		if (strcmp(box->d_name, ".") == 0 || strcmp(box->d_name, "..") == 0)
+			continue;
+
 		curr_student_id = (char*)malloc(sizeof(char)*(strlen(box->d_name)+1));
 		strcpy_s(curr_student_id, 100,box->d_name);
 		box = readdir(main_directory);
