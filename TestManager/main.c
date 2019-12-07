@@ -17,7 +17,7 @@ typedef int EXIT_CODE;
 
 #define ID_LENGTH 9
 #define NUM_OF_STUDENTS 10
-#define STUDENT_DIR_PREFIX_LENGTH 8
+#define STUDENT_DIR_LENGTH 17
 
 #define FAIL_THRESHOLD 60
 #define NUM_OF_HW 10
@@ -51,6 +51,7 @@ int gradeSingleStudent(char* student_id);
 
 EXIT_CODE runGradesCalculation(const char* grades_directory);
 EXIT_CODE getStudentIdsFromFile(const char *grades_directory, const char *student_ids_filename, char *student_ids[], int *student_count);
+EXIT_CODE createGradingProcess(const char *student_grades_directory, HANDLE *process_handle);
 
 int main(int argc, char* argv)
 {
@@ -125,11 +126,12 @@ EXIT_CODE runGradesCalculation(const char* grades_directory)
 	// Open a process to check the grade of each student
 	for (process_count = 0; process_count < student_count; process_count++)
 	{
-		student_grades_directory_length = strlen(grades_directory) + STUDENT_DIR_PREFIX_LENGTH;
+		student_grades_directory_length = strlen(grades_directory) + 2 + STUDENT_DIR_LENGTH;
 		student_grades_directory = (char*)malloc(sizeof(char)*student_grades_directory_length);
-		sprintf_s(student_grades_directory, student_grades_directory_length, "%s\\grades_%s", grades_directory, student_ids[i]);
+		sprintf_s(student_grades_directory, student_grades_directory_length, 
+			"%s\\grades_%s", grades_directory, student_ids[process_count]);
 		
-		process_handles[process_count] = createGradingProcess(student_grades_directory, process_handles[i]);
+		exit_code = createGradingProcess(student_grades_directory, process_handles[process_count]);
 
 		free(student_grades_directory);
 	}
@@ -165,7 +167,7 @@ EXIT_CODE getStudentIdsFromFile(const char *grades_directory, const char *studen
 		strcpy_s(student_ids[i], ID_LENGTH + 1, student_id);
 		i++;
 	}
-	student_count = i;
+	*student_count = i;
 
 	fclose(file);
 
@@ -181,7 +183,7 @@ EXIT_CODE createGradingProcess(const char *student_grades_directory, HANDLE *pro
 	CHAR process_name[] = "TestGrade.exe ";
 	EXIT_CODE exit_code = TM_SUCCESS;
 
-	int command_length = strlen(process_name) + strlen(student_grades_directory) + 1;
+	int command_length = strlen(process_name) + strlen(student_grades_directory) + 2;
 	char* command = (char*)malloc(sizeof(char)*command_length);
 	sprintf_s(command, command_length, "TestGrade.exe %s", student_grades_directory);
 
