@@ -35,33 +35,53 @@ static int exam_grade = 0;
 
 
 /*declerations*/
-void initGradeFile();
+int openGradeFile();
 void printGradeFile(int id, int grade);
-int CreateProcessSimpleMain(char* expression);
+int CreateProcessSimpleMain(char* student_id);
 BOOL CreateProcessSimple(LPTSTR command_line, PROCESS_INFORMATION *process_info_ptr);
-
+int gradeSingleStudent(char* student_id);
 
 int main()
 {
 	char* grades_directory = "grades_123456789";//argv...
+	char* final_grade_filename = "final_grades.txt";
 	//MALLOC - no need for an array because it is in the stack?
 	int students_grades[NUM_OF_STUDENTS] = { 0 };
 	int students_ids[NUM_OF_STUDENTS] = { 0 };
+	int file_handle_return_code = EXIT_SUCCESS;
 	/*process for every student*/
 	/*print their supid messages*/
 	/*save grades in files*/
-	initGradeFile();
+
+	file_handle_return_code = openGradeFile(final_grade_filename);
+	if (file_handle_return_code != EXIT_SUCCESS)
+		return file_handle_return_code;
 	for (int i = 0; i < NUM_OF_HW; i++)
 	{
 		if (students_ids[i] != 0)
-			/*write to grades file "ID_GRADE"*/
-			printGradeFile(students_ids[i], students_grades[i]);
+		{	/*write to grades file "ID_GRADE"*/
+			file_handle_return_code = printGradeFile(students_ids[i], students_grades[i]);
+			if (file_handle_return_code != EXIT_SUCCESS)
+				return file_handle_return_code;
+		}
 	}
 	return 0;
 }
 
 
-int CreateProcessSimpleMain(char* expression)
+int gradeSingleStudent(char* student_id)
+{
+	char* log_filename = "Computation.txt";
+	char* solved_step;
+	char* solution_step = (char*)malloc(sizeof(char) * (strlen(student_id) + 1));
+	strcpy_s(solution_step, strlen(solution_step), student_id);
+
+	CreateProcessSimpleMain(student_id);
+
+	return EXIT_SUCCESS;
+}
+
+int CreateProcessSimpleMain(char* student_id)
 {
 	PROCESS_INFORMATION procinfo;
 	DWORD waitcode;
@@ -69,9 +89,9 @@ int CreateProcessSimpleMain(char* expression)
 	BOOL retVal;
 	CHAR process_name[] = ("TestGrade.exe ");
 
-	int command_length = strlen(expression) + strlen(process_name) + 2;
+	int command_length = strlen(student_id) + strlen(process_name) + 2;
 	char* command = (char*)malloc(sizeof(char)*command_length);
-	sprintf_s(command, command_length, "TestGrade.exe %s", expression);
+	sprintf_s(command, command_length, "TestGrade.exe %s", student_id);
 
 	retVal = CreateProcessSimple(command, &procinfo);
 
@@ -123,28 +143,36 @@ BOOL CreateProcessSimple(LPTSTR command_line, PROCESS_INFORMATION *process_info_
 }
 
 
-void initGradeFile()
+int openGradeFile()
 {
 	/*opens final grades file*/
 	char* filename = "final_grades.txt";
 	FILE *fp;
 	errno_t error;
 	error = fopen_s(&fp, filename, "w");
-
 	if (error != 0)
+	{	
 		printf("An error occured while openning file %s for writing.", filename);
+		return EXIT_FILE_HANDLE_ERROR;
+	}
+	if (fp)
+		fclose(fp);
+
+	return EXIT_SUCCESS;
 }
 
 void printGradeFile(int id, int grade)
 {
 	/*appends grades to final grades file*/
-	char* filename = "final_grades.txt";
 	FILE *fp;
 	errno_t error;
-	error = fopen_s(&fp, filename, "a");
 
+	error = fopen_s(&fp, "final_grades.txt", "a");
 	if (error != 0)
-		printf("An error occured while openning file %s for writing.", filename);
+	{
+		printf("An error occured while openning file %s for writing final_grades.txt");
+		return EXIT_FILE_HANDLE_ERROR;
+	}
 
 	else if (fp)
 	{
